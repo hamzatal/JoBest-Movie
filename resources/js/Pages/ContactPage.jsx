@@ -58,7 +58,7 @@ const ContactPage = () => {
                     <div className="flex items-center">
                         <Clapperboard className="w-10 h-10 text-red-500 mr-3" />
                         <h1 className="text-3xl font-bold">
-                            Movie <span className="text-red-500">Mania</span>
+                            JO <span className="text-red-500">BEST</span>
                         </h1>
                     </div>
                     <Link
@@ -77,7 +77,7 @@ const ContactPage = () => {
                         </h1>
                         <p className="text-xl mb-8 leading-relaxed">
                             We value your feedback and are here to help! Whether you have questions, suggestions,
-                            or just want to share your thoughts about Movie Mania, we'd love to hear from you.
+                            or just want to share your thoughts about JO BEST, we'd love to hear from you.
                             Our team is committed to providing you with the best possible movie streaming experience.
                         </p>
                     </div>

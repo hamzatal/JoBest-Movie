@@ -7,7 +7,7 @@
         <meta name="keywords" content="movies, movie streaming, trailers, film reviews, new releases, watch movies online, best films, streaming platform">
 
 
-        <title>{{ $title ?? 'Movie Mania' }}</title>
+        <title>{{ $title ?? 'JO BEST' }}</title>
 
         <!-- icon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('/clapperboard.png') }}">

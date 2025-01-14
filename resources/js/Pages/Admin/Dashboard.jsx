@@ -118,7 +118,7 @@
 //         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
 //           <div className="flex items-center space-x-2">
 //             <Clapperboard className="w-8 h-8 text-red-500" />
-//             <span className="text-xl font-bold dark:text-white">Movie Mania</span>
+//             <span className="text-xl font-bold dark:text-white">JO BEST</span>
 //           </div>
 //           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
 //             <X className="w-6 h-6 text-gray-500" />
@@ -1350,7 +1350,7 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <div className="flex items-center space-x-2">
             <Clapperboard className="w-8 h-8 text-red-500" />
-            <span className="text-xl font-bold dark:text-white">Movie Mania</span>
+            <span className="text-xl font-bold dark:text-white">JO BEST</span>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
             <X className="w-6 h-6 text-gray-500" />
@@ -1645,7 +1645,7 @@ export default AdminDashboard;
 //         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
 //           <div className="flex items-center space-x-2">
 //             <Clapperboard className="w-8 h-8 text-red-500" />
-//             <span className="text-xl font-bold dark:text-white">Movie Mania</span>
+//             <span className="text-xl font-bold dark:text-white">JO BEST</span>
 //           </div>
 //           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
 //             <X className="w-6 h-6 text-gray-500" />

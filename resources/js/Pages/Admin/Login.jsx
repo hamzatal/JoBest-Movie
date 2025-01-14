@@ -87,7 +87,7 @@ const AdminLoginPage = () => {
                 <p className={`text-xl text-center max-w-md ${
                     isDarkMode ? "text-gray-300" : "text-gray-600"
                 }`}>
-                    Secure administrative access for Movie Mania. 
+                    Secure administrative access for JO BEST. 
                     Authorized personnel only.
                 </p>
             </div>

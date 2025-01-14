@@ -133,7 +133,7 @@ export default function Register() {
         <div className="flex items-center mb-8 animate-fade-in">
         <Clapperboard className="w-10 h-10 text-red-500 mr-3" />
           <h1 className={`text-4xl font-bold ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Movie <span className="text-red-500">Mania</span>
+            JO <span className="text-red-500">BEST</span>
           </h1>
         </div>
         <p className={`text-xl text-center max-w-md ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>

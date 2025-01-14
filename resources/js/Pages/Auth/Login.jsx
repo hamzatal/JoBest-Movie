@@ -101,7 +101,7 @@ const LoginPage = () => {
                             isDarkMode ? "text-white" : "text-gray-900"
                         }`}
                     >
-                        Movie <span className="text-red-500">Mania</span>
+                        JO <span className="text-red-500">BEST</span>
                     </h1>
                 </div>
                 <p
@@ -110,7 +110,7 @@ const LoginPage = () => {
                     }`}
                 >
                     Discover the ultimate movie streaming experience. Watch
-                    thousands of award-winning movies, TV shows, and more on Movie Mania.
+                    thousands of award-winning movies, TV shows, and more on JO BEST.
                 </p>
             </div>
 

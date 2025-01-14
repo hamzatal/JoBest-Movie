@@ -87,7 +87,7 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                     <h1 className={`text-2xl font-bold tracking-tight ${
                         isDarkMode ? "text-white" : "text-gray-900"
                     }`}>
-                        Movie <span className="text-red-500">Mania</span>
+                        JO <span className="text-red-500">BEST</span>
                     </h1>
                 </motion.div>
             </div>

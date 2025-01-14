@@ -271,7 +271,7 @@ const SubscriptionConfirmationModal = ({
 
                 {/* Confirmation Message */}
                 <p className="text-center text-gray-300 mb-6 animate-fadeIn">
-                    Your subscription is now active. Enjoy unlimited entertainment with Movie Mania!
+                    Your subscription is now active. Enjoy unlimited entertainment with JO BEST!
                 </p>
 
                 {/* Continue Button */}
@@ -745,7 +745,7 @@ const SubscriptionPage = () => {
                     <div className="flex items-center">
                         <Clapperboard className="w-10 h-10 text-red-500 mr-3" />
                         <h1 className="text-3xl font-bold">
-                            Movie <span className="text-red-500">Mania</span>
+                            JO <span className="text-red-500">BEST</span>
                         </h1>
                     </div>
                     <div className="flex items-center space-x-4">
@@ -766,7 +766,7 @@ const SubscriptionPage = () => {
                             <span className="text-red-500">Plan</span>
                         </h1>
                         <p className="text-xl mb-8 leading-relaxed">
-                            Unlock the full potential of Movie Mania. Select a plan
+                            Unlock the full potential of JO BEST. Select a plan
                             that fits your entertainment needs and start your
                             cinematic journey today.
                         </p>

@@ -41,7 +41,7 @@ const ConfirmPassword = () => {
           <div className="lg:hidden flex items-center justify-center mb-8">
           <Clapperboard className="w-10 h-10 text-red-500 mr-3" />
             <h1 className={`text-3xl font-bold ml-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            Movie <span className="text-red-500">Mania</span>
+            JO <span className="text-red-500">BEST</span>
             </h1>
           </div>
 

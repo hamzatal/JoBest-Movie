@@ -7,7 +7,7 @@ const LegalPopup = ({ type, isDarkMode, onClose }) => {
     privacyPolicy: {
       title: 'Privacy Policy',
       text: `
-        At Movie Mania, we are committed to protecting your privacy. Here's how we handle your personal information:
+        At JO BEST, we are committed to protecting your privacy. Here's how we handle your personal information:
 
         1. Information Collection
         We collect essential information directly provided by you during account creation, interactions, or services use.
@@ -34,7 +34,7 @@ const LegalPopup = ({ type, isDarkMode, onClose }) => {
     termsOfService: {
       title: 'Terms of Service',
       text: `
-        Welcome to Movie Mania. By using our services, you agree to the following terms:
+        Welcome to JO BEST. By using our services, you agree to the following terms:
 
         1. Acceptance of Terms
         By accessing or using our platform, you acknowledge and agree to be bound by these Terms of Service. If you do not agree, please do not use our services.
@@ -140,7 +140,7 @@ const Footer = ({ isDarkMode }) => {
             : 'bg-gray-100 text-gray-600'
         }`}
       >
-        <p>© 2024 Movie Mania. All rights reserved.</p>
+        <p>© 2024 JO BEST. All rights reserved.</p>
         <div className="mt-4 space-x-4">
           <button 
             onClick={() => setActivePopup('privacyPolicy')} 

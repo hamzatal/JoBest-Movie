@@ -12,7 +12,7 @@ const TeamMember = ({ name, role, linkedin, github }) => (
         <p className="text-xl text-gray-300 mb-6 font-medium">{role}</p>
         <p className="text-gray-400 mb-8 max-w-lg mx-auto">
             Passionate developer dedicated to creating exceptional movie streaming experiences. 
-            Bringing technical expertise and creativity to make Movie Mania the ultimate destination for cinema lovers.
+            Bringing technical expertise and creativity to make JO BEST the ultimate destination for cinema lovers.
         </p>
         <div className="flex justify-center space-x-6">
             {linkedin && (
@@ -69,7 +69,7 @@ const AboutUsPage = () => {
                     <div className="flex items-center">
                         <Clapperboard className="w-10 h-10 text-red-500 mr-3" />
                         <h1 className="text-3xl font-bold">
-                            Movie <span className="text-red-500">Mania</span>
+                            JO <span className="text-red-500">BEST</span>
                         </h1>
                     </div>
                     <Link
@@ -84,27 +84,27 @@ const AboutUsPage = () => {
                 <div className="container mx-auto px-6 py-6 flex flex-col items-center justify-center">
                     <div className="text-center max-w-4xl mb-16">
                         <h1 className="text-6xl font-extrabold mb-6 leading-tight">
-                            About Movie <span className="text-red-500">Mania</span>
+                            About JO <span className="text-red-500">BEST</span>
                         </h1>
                         <p className="text-xl mb-8 leading-relaxed">
-                            At Movie Mania, we believe movies are more than just entertainment—they're an experience.
+                            At JO BEST, we believe movies are more than just entertainment—they're an experience.
                             Our mission is to bring cinematic magic to everyone, everywhere, by offering a curated
                             collection of blockbuster hits, hidden gems, and exclusive originals.
                         </p>
                         <p className="text-xl mb-8 leading-relaxed">
-                            Founded with a passion for storytelling, Movie Mania is committed to delivering high-quality
+                            Founded with a passion for storytelling, JO BEST is committed to delivering high-quality
                             streaming services and fostering a community of movie lovers. We aim to redefine how you experience entertainment,
                             whether you're a casual viewer or a cinema aficionado.
                         </p>
                         <p className="text-xl mb-8 leading-relaxed">
-                            Join us as we bring the silver screen closer to you—because at Movie Mania, the magic of movies never stops.
+                            Join us as we bring the silver screen closer to you—because at JO BEST, the magic of movies never stops.
                         </p>
                     </div>
 
                     {/* Team Section */}
                     <div className="w-full max-w-6xl mb-16">
                         <h2 className="text-4xl font-bold mb-4 text-center">Meet Our <span className="text-red-500">Developer</span></h2>
-                        <p className="text-gray-400 text-center mb-12 text-xl">The talent behind Movie Mania's innovation</p>
+                        <p className="text-gray-400 text-center mb-12 text-xl">The talent behind JO BEST's innovation</p>
                         <TeamMember 
                             name={teamMember.name}
                             role={teamMember.role}
