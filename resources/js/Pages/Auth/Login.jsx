@@ -276,7 +276,6 @@ const LoginPage = () => {
                         >
                             Sign In
                         </button>
-
                         <p
                             className={`text-center text-sm ${
                                 isDarkMode ? "text-gray-400" : "text-gray-600"
@@ -291,10 +290,23 @@ const LoginPage = () => {
                                         : "text-red-600 hover:text-red-700"
                                 }`}
                             >
-                                Register now
+                                 Register now 
+                            </Link>
+                            <span> / </span>
+                            <Link
+    href={route("admin.login")} 
+    className={`font-medium hover:underline ${
+        isDarkMode
+            ? "text-red-400 hover:text-red-300"
+            : "text-red-600 hover:text-red-700"
+    }`}
+>
+    Admin ?
                             </Link>
                         </p>
+                        
                     </form>
+
                 </div>
             </div>
         </div>

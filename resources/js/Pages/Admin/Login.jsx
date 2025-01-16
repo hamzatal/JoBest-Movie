@@ -18,8 +18,8 @@ const AdminLoginPage = () => {
 
     const validatePassword = (password) => {
         if (!password) return "Password is required";
-        if (password.length < 12)
-            return "Admin password must be at least 12 characters long";
+        if (password.length < 8)
+            return "Admin password must be at least 8 characters long";
         return null;
     };
 

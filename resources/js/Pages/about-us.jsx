@@ -43,10 +43,10 @@ const AboutUsPage = () => {
     const movieBackground = "/images/background.jpg";
     
     const teamMember = {
-        name: "Haneen Abumazrou",
+        name: "Hamza Al-Tal",
         role: "Lead Developer",
-        linkedin: "https://www.linkedin.com/in/haneen-abumazrou/",
-        github: "https://github.com/HaneenAbumazrou"
+        linkedin: "https://www.linkedin.com/in/hamza-tal/",
+        github: "https://github.com/hamzatal"
     };
 
     return (

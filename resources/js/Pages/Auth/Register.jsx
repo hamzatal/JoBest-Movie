@@ -65,6 +65,7 @@ export default function Register() {
     email: '',
     password: '',
     password_confirmation: '',
+    role: 'user',
   });
 
   useEffect(() => {
@@ -286,6 +287,28 @@ export default function Register() {
                 <span className="text-red-500 text-sm mt-1">{errors.password_confirmation}</span>
               )}
             </div>
+
+            {/* Role Field */}
+            {/* <div>
+              <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={data.role}
+                onChange={(e) => setData('role', e.target.value)}
+                className={`w-full p-3 rounded-lg border transition-colors focus:ring-2 focus:ring-red-500 ${
+                  isDarkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
+                required
+              >
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div> */}
 
             <div className="flex items-center justify-between">
               <Link

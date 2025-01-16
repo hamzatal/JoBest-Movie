@@ -28,7 +28,7 @@ const DashboardView = () => {
       setMovies(moviesData);
       setTotalUsers(usersData.data.length);
       setActiveUsers(usersData.data.filter(user => user.is_active).length);
-      setRevenue(12426); // Example fixed revenue
+      setRevenue(12426);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       alert('Error fetching data. Please try again.');
