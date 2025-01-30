@@ -96,7 +96,9 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                         className="w-full h-full rounded-full object-cover"
                     />
                 ) : (
-                    <User className={`w-6 h-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                    <div className={`w-full h-full rounded-full flex items-center justify-center ${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'}`}>
+                        <User className={`w-6 h-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+                    </div>
                 )}
             </motion.button>
 
@@ -128,7 +130,7 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                                     w-full
                                     text-left
                                     transition-colors
-                                    ${isActive(item.href) ?
+                                    ${isActive(item.href) ? 
                                         (isDarkMode ? 'bg-gray-700' : 'bg-gray-100') :
                                         (isDarkMode ? 'hover:bg-gray-700 focus:bg-gray-700' : 'hover:bg-gray-100 focus:bg-gray-100')
                                     }
@@ -204,11 +206,10 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                         `}
                     >
                         <item.icon
-                            className={`
-                                w-5 h-5
+                            className={`w-5 h-5
                                 transition-transform
                                 group-hover:scale-110
-                                ${isActive(item.href) ?
+                                ${isActive(item.href) ? 
                                     (isDarkMode ? 'text-white' : 'text-black') :
                                     (isDarkMode ? 'text-gray-400' : 'text-gray-600')
                                 }
@@ -275,7 +276,7 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                                         text-sm
                                         font-medium
                                         w-full
-                                        ${isActive(item.href) ?
+                                        ${isActive(item.href) ? 
                                             (isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black') :
                                             (isDarkMode ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-black')
                                         }
@@ -293,18 +294,11 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
                             <div className="px-4 mt-4">
                                 <Link
                                     href="/wishlist"
-                                    className={`
-                                        flex items-center space-x-2
-                                        px-3 py-2
-                                        rounded-lg
-                                        text-sm
-                                        font-medium
-                                        w-full
-                                        ${isActive("/wishlist") ?
-                                            (isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black') :
+                                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium w-full ${
+                                        isActive("/wishlist") ? 
+                                            (isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-black') : 
                                             (isDarkMode ? 'text-gray-300 hover:bg-gray-800 hover:text-white' : 'text-gray-700 hover:bg-gray-100 hover:text-black')
-                                        }
-                                    `}
+                                    }`}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                 >
                                     <Bookmark className="w-5 h-5" />

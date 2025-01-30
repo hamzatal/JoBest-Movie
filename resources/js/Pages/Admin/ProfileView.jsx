@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Save, User, Mail, Lock } from 'lucide-react';
+import { Save, User, Mail, Lock, Camera } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const ProfileView = () => {
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
+    avatar: '', // إضافة الحقل الخاص بالصورة
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -14,6 +15,8 @@ const ProfileView = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [file, setFile] = useState(null); // لحفظ الصورة المرفوعة
+  const [avatarPreview, setAvatarPreview] = useState(null); // عرض الصورة قبل حفظها
 
   useEffect(() => {
     fetchProfile();
@@ -27,7 +30,8 @@ const ProfileView = () => {
       setProfileData(prevData => ({
         ...prevData,
         name: data.name,
-        email: data.email
+        email: data.email,
+        avatar: data.avatar // التأكد من إضافة الرابط
       }));
     } catch (error) {
       Swal.fire({
@@ -42,21 +46,24 @@ const ProfileView = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    let formData = new FormData();
+    formData.append('name', profileData.name);
+    formData.append('email', profileData.email);
+    formData.append('currentPassword', profileData.currentPassword);
+    formData.append('newPassword', profileData.newPassword);
+    formData.append('newPassword_confirmation', profileData.confirmPassword);
+    if (file) {
+      formData.append('avatar', file); // إضافة الصورة المرفوعة
+    }
+
     try {
       const response = await fetch('/admin/profile', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
         },
-        body: JSON.stringify({
-          name: profileData.name,
-          email: profileData.email,
-          currentPassword: profileData.currentPassword,
-          newPassword: profileData.newPassword,
-          newPassword_confirmation: profileData.confirmPassword
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -80,6 +87,13 @@ const ProfileView = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile); // حفظ الصورة المرفوعة
+    const previewUrl = URL.createObjectURL(selectedFile); // إنشاء رابط مؤقت للصورة
+    setAvatarPreview(previewUrl); // تحديث الصورة المعروضة
+  };
+
   if (loading) {
     return <div className="p-6 text-center">Loading...</div>;
   }
@@ -101,8 +115,27 @@ const ProfileView = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="flex justify-center mb-6">
-                <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                  <User className="w-16 h-16 text-gray-400" />
+                <div className="relative w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="User Avatar" className="w-32 h-32 rounded-full object-cover" />
+                  ) : profileData.avatar ? (
+                    <img src={profileData.avatar} alt="User Avatar" className="w-32 h-32 rounded-full object-cover" />
+                  ) : (
+                    <User className="w-16 h-16 text-gray-400" />
+                  )}
+                  {isEditing && (
+                    <label htmlFor="avatar" className="absolute bottom-0 right-0 bg-gray-700 text-white rounded-full p-1 cursor-pointer">
+                      <Camera className="w-6 h-6" />
+                    </label>
+                  )}
+                  <input
+                    type="file"
+                    id="avatar"
+                    name="avatar"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                  />
                 </div>
               </div>
 
@@ -138,8 +171,6 @@ const ProfileView = () => {
                     />
                   </div>
                 </div>
-
-                
 
                 {isEditing && (
                   <div className="mt-6">
