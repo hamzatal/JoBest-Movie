@@ -67,9 +67,9 @@ const ChatBot = ({ isChatOpen, toggleChat, resetChat }) => {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-3 right-8 z-50">
       {isChatOpen && (
-        <div className="absolute bottom-24 right-0 w-96 h-[500px] rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 ease-in-out bg-gray-800 border border-gray-700">
+        <div className="absolute bottom-20 right-0 w-96 h-[500px] rounded-3xl shadow-2xl overflow-hidden transition-all duration-300 ease-in-out bg-gray-800 border border-gray-700">
           <div className="flex justify-between items-center p-4 border-b bg-gray-900 border-gray-700">
             <div className="flex items-center">
               <MessageCircle className="mr-2 text-red-500" />
