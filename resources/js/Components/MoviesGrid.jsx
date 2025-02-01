@@ -1,11 +1,10 @@
-// components/ModernMoviesGrid.jsx
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Slider from "./Slider";
 import MovieCard from "./MovieCard";
-import { fetchMovies } from "../Components/tmdb";
+import { fetchMovies } from "./tmdb";
 
-const ModernMoviesGrid = ({
+const MoviesGrid = ({
     title,
     apiUrl,
     icon,
@@ -141,4 +140,4 @@ const ModernMoviesGrid = ({
     );
 };
 
-export default ModernMoviesGrid;
+export default MoviesGrid;

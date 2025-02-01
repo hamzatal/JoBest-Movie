@@ -4,7 +4,7 @@ import NavBar from "../components/NavBar";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import ChatBot from "../components/ChatBot";
-import ModernMoviesGrid from "../components/ModernMoviesGrid";
+import ModernMoviesGrid from "../Components/MoviesGrid";
 import { movieEndpoints } from "../Components/tmdb";
 import {
     X,
