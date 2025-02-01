@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react"; // Import X icon for the clear button
 import MoviePopup from "../components/PopupMovie";
 import { createPortal } from "react-dom";
 
@@ -46,6 +46,12 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
             });
     };
 
+    const handleClearSearch = () => {
+        setSearchQuery(""); // Clear the search query
+        setSearchResults([]); // Clear the search results
+        onSearchResults([]); // Notify parent component
+    };
+
     const handleMovieSelect = (movie) => {
         setSelectedMovie(movie);
     };
@@ -82,7 +88,6 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
         }
     };
 
-
     return (
         <div className="relative w-full max-w-xl mx-auto">
             {/* Search Input */}
@@ -107,6 +112,22 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
                             : "bg-white text-gray-900 placeholder-gray-400 shadow-xl shadow-gray-300/50 focus:ring-indigo-500/30"
                     }`}
                 />
+                {/* Clear Button */}
+                {searchQuery && (
+                    <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={handleClearSearch}
+                        className={`absolute inset-y-0 right-0 flex items-center pr-4 ${
+                            isDarkMode
+                                ? "text-gray-300 hover:text-cyan-400"
+                                : "text-gray-500 hover:text-indigo-600"
+                        }`}
+                    >
+                        <X className="w-5 h-5" />
+                    </motion.button>
+                )}
             </div>
 
             {/* Search Results Dropdown */}
