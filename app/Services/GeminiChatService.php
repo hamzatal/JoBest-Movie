@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\DB;
 
-class ChatGPTServices
+class GeminiChatService
 {
     protected $client;
     protected $apiKey;
@@ -13,7 +14,7 @@ class ChatGPTServices
     public function __construct()
     {
         $this->client = new Client();
-        $this->apiKey = env('OPENAI_API_KEY');
+        $this->apiKey = env('GEMINI_API_KEY');
     }
 
     /**
@@ -76,19 +77,15 @@ class ChatGPTServices
      */
     public function searchMovie($movieId)
     {
-        // Get movie details
         $movieDetails = $this->getMovieDetails($movieId);
 
-        // If movie exists
         if ($movieDetails['exists']) {
-            // Prepare response for existing movie
             $response = [
                 'status' => 'found',
                 'message' => 'Movie is available on our site!',
                 'movie' => $movieDetails
             ];
 
-            // Find similar movies
             $similarMovies = $this->findSimilarMovies(
                 $movieDetails['genre'],
                 $movieDetails['id']
@@ -99,10 +96,8 @@ class ChatGPTServices
             return $response;
         }
 
-        // If movie does not exist
         try {
-            // Use ChatGPT to suggest a similar movie
-            $aiSuggestion = $this->askChatGPT(
+            $aiSuggestion = $this->askGemini(
                 "Suggest a similar movie to the movie with ID $movieId. " .
                 "Provide a brief description and why it might be interesting."
             );
@@ -110,7 +105,7 @@ class ChatGPTServices
             return [
                 'status' => 'not_found',
                 'message' => 'Unfortunately, this movie is not in our database.',
-                'ai_suggestion' => $aiSuggestion['choices'][0]['message']['content']
+                'ai_suggestion' => $aiSuggestion
             ];
         } catch (\Exception $e) {
             return [
@@ -122,40 +117,24 @@ class ChatGPTServices
     }
 
     /**
-     * Ask ChatGPT for a movie-related query
+     * Ask Google Gemini for a query
      *
      * @param string $message
-     * @return array
+     * @return string
      */
-    public function askChatGPT($message)
+    public function askGemini($message)
     {
         try {
-            $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => [
-                    'model' => 'gpt-4',
-                    'messages' => [
-                        ['role' => 'system', 'content' => 'You are a movie recommendation assistant.'],
-                        ['role' => 'user', 'content' => $message],
-                    ],
-                    'max_tokens' => 200,
-                    'temperature' => 0.7,
-                ],
+            $response = $this->client->post('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' . $this->apiKey, [
+                'verify' => false,
+                'json' => ['contents' => [['parts' => [['text' => $message]]]]],
+                'headers' => ['Content-Type' => 'application/json'],
             ]);
 
             $responseBody = json_decode($response->getBody()->getContents(), true);
-
-            if (isset($responseBody['choices'][0]['message']['content'])) {
-                return $responseBody;
-            }
-
-            return ['choices' => [['message' => ['content' => 'No meaningful response from ChatGPT.']]]];
-
+            return $responseBody['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from Gemini API.';
         } catch (RequestException $e) {
-            throw new \Exception('Error connecting to OpenAI API: ' . $e->getMessage());
+            throw new \Exception('Error connecting to Gemini API: ' . $e->getMessage());
         }
     }
 }
