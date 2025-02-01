@@ -70,7 +70,6 @@ const MoviePopup = ({
         onAddToWatchlist(movie);
         setIsAdded(!isAdded);
     };
-
     const handleToggleTrailer = () => {
         setIsTrailerPlaying(!isTrailerPlaying);
     };

@@ -103,7 +103,7 @@ const MovieCard = ({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                         <div className="flex space-x-4 justify-center">
                             <a
-                                href={movie.trailer_url}
+                                href={movie.trailerUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-5 py-3 rounded-full transition-all duration-300"

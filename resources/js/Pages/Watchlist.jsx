@@ -101,32 +101,40 @@ const WatchlistPage = () => {
     // Remove movie from the watchlist
     const removeFromWatchlist = async () => {
         if (!deletionModal.movieId) return;
-
+    
         try {
             const userResponse = await axios.get("/user");
             const userId = userResponse.data.id;
-
+    
             await axios.delete(`/favorites/${deletionModal.movieId}`, {
                 data: { user_id: userId },
             });
-
+    
             // Remove movie from local storage
             const updatedWatchlist = watchlist.filter(
                 (movie) => movie.id !== deletionModal.movieId
             );
             localStorage.setItem("watchlist", JSON.stringify(updatedWatchlist));
-
+    
             // Update the watchlist locally
             setWatchlist(updatedWatchlist);
-
+    
+            const event = new CustomEvent('watchlistUpdate', {
+                detail: {
+                    movie: { id: deletionModal.movieId },
+                    action: 'remove'
+                }
+            });
+            window.dispatchEvent(event);
+    
             // Show deletion confirmation
             setDeletionConfirmation(`${deletionModal.movieTitle} has been removed from your watchlist`);
-
+    
             // Clear confirmation after 3 seconds
             setTimeout(() => {
                 setDeletionConfirmation(null);
             }, 3000);
-
+    
             // Close the modal
             setDeletionModal({ isOpen: false, movieId: null, movieTitle: '' });
         } catch (error) {
