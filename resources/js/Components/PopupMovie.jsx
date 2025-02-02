@@ -66,10 +66,20 @@ const MoviePopup = ({
         }
     }, [movie?.id]);
 
-    const handleToggleWatchlist = () => {
-        onAddToWatchlist(movie);
-        setIsAdded(!isAdded);
-    };
+        const handleToggleWatchlist = async () => {
+            try {
+                const response = await api.post("/favorites", {
+                    movie_id: movie.id,
+                });
+        
+                if (response.status === 201) {
+                    setIsAdded(!isAdded);
+                    onAddToWatchlist(movie); // تحديث حالة الأماني في الواجهة الأمامية
+                }
+            } catch (error) {
+                console.error("Error adding to watchlist:", error);
+            }
+        };
     const handleToggleTrailer = () => {
         setIsTrailerPlaying(!isTrailerPlaying);
     };

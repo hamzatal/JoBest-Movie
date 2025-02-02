@@ -47,38 +47,36 @@ class FavoriteController extends Controller
 
 
     // Add a movie to favorites
-    public function store(Request $request, $movieId)
+    public function store(Request $request)
     {
         try {
-            // Ensure the user is authenticated
             $userId = auth()->id();
-
-            // If the user is not authenticated, return an unauthorized response
+    
             if (!$userId) {
                 return response()->json(['message' => 'Unauthorized.'], 401);
             }
-
-            // Check if the movie exists before adding to favorites
+    
+            $movieId = $request->input('movie_id');
             $movie = Movie::find($movieId);
+    
             if (!$movie) {
-                return response()->json(['message' => 'Movie not found.'], 404); // Movie not found
+                return response()->json(['message' => 'Movie not found.'], 404);
             }
-
-            // Check if the movie is already in the user's favorites
+    
             $favorite = Favorite::firstOrCreate([
-                'user_id' => $userId, // Use the authenticated user's ID
+                'user_id' => $userId,
                 'movie_id' => $movieId,
             ]);
-
+    
             return response()->json([
                 'message' => 'Movie added to favorites successfully.',
-                'data' => $favorite
+                'data' => $favorite,
             ], 201);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while adding the movie to favorites.',
                 'error' => $e->getMessage(),
-            ], 500); // Internal Server Error
+            ], 500);
         }
     }
 

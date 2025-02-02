@@ -144,7 +144,7 @@ const Home = () => {
             <div className="fixed bottom-24 right-6 z-50 flex flex-col items-center">
                 {isTooltipVisible && (
                     <div
-                        className={`relative mb-5 p-5 bg-white text-black rounded-lg shadow-lg text-sm transition-all duration-300 animate-fade-in-down whitespace-nowrap`}
+                        className={`relative mb-0 p-5 bg-white text-black rounded-lg shadow-lg text-sm transition-all duration-300 animate-fade-in-down whitespace-nowrap`}
                     >
                         <button
                             onClick={handleCloseTooltip}
@@ -153,7 +153,7 @@ const Home = () => {
                             <X size={20} />
                         </button>
                         <div className="flex items-center">
-                            <MessageCircle className="mr-2 text-blue-500" />
+                            <MessageCircle className="mr-1 text-blue-500" />
                             <p>Need help? Chat with our AI assistant</p>
                         </div>
                     </div>

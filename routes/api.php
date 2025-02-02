@@ -56,7 +56,7 @@ Route::get('movies/random', [MovieController::class, 'random']);
 
 // Favorite Routes
 Route::get('favorites', [FavoriteController::class, 'index']);
-Route::post('favorites/{movieId}', [FavoriteController::class, 'store']);
+Route::post('/favorites', [FavoriteController::class, 'store']);
 Route::delete('favorites/{movieId}', [FavoriteController::class, 'destroy']);
 
 // Reviews Routes

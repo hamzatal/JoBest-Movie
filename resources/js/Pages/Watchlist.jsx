@@ -46,47 +46,37 @@ const WatchlistPage = () => {
     };
     // Fetch the watchlist data
     useEffect(() => {
+        const handleWatchlistUpdate = (event) => {
+            const { movie, action } = event.detail;
+            
+            if (action === 'add') {
+                setWatchlist(prev => [...prev, movie]);
+            } else if (action === 'remove') {
+                setWatchlist(prev => prev.filter(m => m.id !== movie.id));
+            }
+        };
+
+        window.addEventListener('watchlistUpdate', handleWatchlistUpdate);
+        return () => window.removeEventListener('watchlistUpdate', handleWatchlistUpdate);
+    }, []);
+
+    // Fetch watchlist on component mount
+    useEffect(() => {
         const fetchWatchlist = async () => {
             try {
                 setLoading(true);
-
-                // Check if the watchlist is already saved in localStorage
                 const storedWatchlist = localStorage.getItem("watchlist");
+                
                 if (storedWatchlist) {
                     setWatchlist(JSON.parse(storedWatchlist));
-                    setLoading(false);
-                    return;
+                } else {
+                    const userResponse = await axios.get("/user");
+                    const favoritesResponse = await axios.get(`/favorites`);
+                    const processedWatchlist = favoritesResponse.data.data;
+                    
+                    localStorage.setItem("watchlist", JSON.stringify(processedWatchlist));
+                    setWatchlist(processedWatchlist);
                 }
-
-                // Fetch the authenticated user's data
-                const userResponse = await axios.get("/user");
-                const userId = userResponse.data.id;
-
-                // Fetch watchlist for the authenticated user
-                const favoritesResponse = await axios.get(`/favorites`);
-                let processedWatchlist = favoritesResponse.data.data;
-
-                if (filter !== "all") {
-                    processedWatchlist = processedWatchlist.filter(
-                        (movie) => movie.genre.toLowerCase() === filter
-                    );
-                }
-
-                if (sort === "rating") {
-                    processedWatchlist.sort((a, b) => b.rating - a.rating);
-                } else if (sort === "recent") {
-                    processedWatchlist.sort(
-                        (a, b) =>
-                            new Date(b.created_at) - new Date(a.created_at)
-                    );
-                }
-
-                // Store the fetched watchlist in localStorage
-                localStorage.setItem(
-                    "watchlist",
-                    JSON.stringify(processedWatchlist)
-                );
-                setWatchlist(processedWatchlist);
             } catch (error) {
                 setError("Failed to load watchlist");
                 console.error("Error fetching watchlist:", error);
@@ -96,8 +86,7 @@ const WatchlistPage = () => {
         };
 
         fetchWatchlist();
-    }, [filter, sort]);
-
+    }, []);
     // Remove movie from the watchlist
     const removeFromWatchlist = async () => {
         if (!deletionModal.movieId) return;
@@ -503,13 +492,9 @@ const WatchlistPage = () => {
     };
 
     return (
-        <div
-            className={`min-h-screen pt-16 flex flex-col transition-colors duration-300 ${
-                isDarkMode
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-50 text-gray-900"
-            }`}
-        >
+        <div className={`min-h-screen pt-16 flex flex-col transition-colors duration-300 ${
+            isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+        }`}>
             <Head title="My Watchlist" />
             <NavBar isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
 
