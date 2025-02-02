@@ -29,9 +29,9 @@ const Banner = ({ isDarkMode }) => {
     }, []);
 
     const getBackgroundImage = () => {
-        if (loading) return "/movie-banner-bg.jpg";
-        if (error) return "/movie-banner-error.jpg";
-        return backgroundImage || "/movie-banner-bg.jpg";
+        if (loading) return "images/background.jpg";
+        if (error) return "images/background.jpg";
+        return backgroundImage || "images/background.jpg";
     };
 
     const handleWatchNowClick = () => {

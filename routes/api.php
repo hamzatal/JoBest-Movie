@@ -14,13 +14,15 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WatchedMoviesController;
 
 
-Route::post('/chatbot', [ChatBotController::class, 'chatbot']); // Updated to 'chatbot'
 
 /*
 |----------------------------------------------------------------------
 | API Routes
 |----------------------------------------------------------------------
 */
+
+
+Route::post('/chatbot', [ChatBotController::class, 'chatbot']); // Updated to 'chatbot'
 
 Route::get('movies/chatgpt-recommendations/{userId}', [MovieController::class, 'chatGptRecommendations']);
 
@@ -57,7 +59,7 @@ Route::get('movies/random', [MovieController::class, 'random']);
 
 // Favorite Routes
 Route::get('favorites', [FavoriteController::class, 'index']);
-Route::post('/favorites', [FavoriteController::class, 'store']);
+Route::post('favorites/{movieId}', [FavoriteController::class, 'store']);
 Route::delete('favorites/{movieId}', [FavoriteController::class, 'destroy']);
 
 // Reviews Routes
