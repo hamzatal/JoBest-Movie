@@ -9,6 +9,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatBotController;
+use App\Http\Controllers\SubscriptionController;
 // use App\Http\Controllers\MohammadController;
 use App\Http\Controllers\WatchedMoviesController;
 
