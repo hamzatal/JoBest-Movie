@@ -71,7 +71,7 @@ const MovieCard = ({
                 whileTap={{ scale: 0.98 }}
                 className="relative group overflow-hidden rounded-3xl shadow-2xl border border-gray-200/20 transform transition-all duration-300 hover:shadow-2xl"
             >
-                <div className="relative w-full h-[500px] overflow-hidden">
+                <div className="relative w-full h-[400px] overflow-hidden">
                     <img
                         src={movie.poster_url}
                         alt={movie.title}
@@ -102,7 +102,7 @@ const MovieCard = ({
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                         <div className="flex space-x-4 justify-center">
-                            <a
+                            {/* <a
                                 href={movie.trailerUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -110,13 +110,13 @@ const MovieCard = ({
                             >
                                 <PlayCircle className="w-6 h-6" />
                                 <span className="font-medium">Trailer</span>
-                            </a>
+                            </a> */}
                             <button
                                 onClick={handleWatchNowClick}
                                 className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105"
                             >
-                                <Info className="w-6 h-6" />
-                                <span className="font-medium">Details</span>
+                                <Info className="w-8 h-6" />
+                                <span className="font-large">Details</span>
                             </button>
                         </div>
                     </div>
