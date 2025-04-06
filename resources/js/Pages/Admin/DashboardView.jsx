@@ -1,7 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Film, Users, Activity } from 'lucide-react';
-import { useState, useEffect } from 'react';
-
 
 const DashboardView = () => {
   const [movies, setMovies] = useState([]);

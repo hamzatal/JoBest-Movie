@@ -1,433 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import { Head } from '@inertiajs/react';
-// import { 
-//   Users, Film, Calendar, Settings, 
-//   LogOut, Menu, X, Bell, Search,
-//   BarChart2, Activity, TrendingUp,
-//   Clapperboard, Plus, Edit, Trash
-// } from 'lucide-react';
-
-// const AdminDashboard = () => {
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-//   const [movies, setMovies] = useState([]);
-//   const [totalUsers, setTotalUsers] = useState(0);
-//   const [revenue, setRevenue] = useState(0);
-//   const [activeUsers, setActiveUsers] = useState(0);
-//   const [showModal, setShowModal] = useState(false);
-//   const [selectedMovie, setSelectedMovie] = useState(null);
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     category_id: '',
-//     genre: '',
-//     description: '',
-//     release_date: '',
-//     rating: '',
-//     poster_url: '',
-//     trailer_url: '',
-//     director: '',
-//     cast: ''
-//   });
-
-//   useEffect(() => {
-//     fetchDashboardData();
-//   }, []);
-
-//   const fetchDashboardData = async () => {
-//     try {
-//       const moviesResponse = await fetch('/api/movies');
-//       const moviesData = await moviesResponse.json();
-//       setMovies(moviesData);
-
-//       // In a real app, you'd fetch these from your backend
-//       setTotalUsers(2543);
-//       setRevenue(12426);
-//       setActiveUsers(892);
-//     } catch (error) {
-//       console.error('Error fetching dashboard data:', error);
-//     }
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       const url = selectedMovie 
-//         ? `/api/movies/${selectedMovie.id}` 
-//         : '/api/movies';
-      
-//       const method = selectedMovie ? 'PUT' : 'POST';
-      
-//       const response = await fetch(url, {
-//         method,
-//         headers: {
-//           'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(formData),
-//       });
-      
-//       if (response.ok) {
-//         setShowModal(false);
-//         fetchDashboardData();
-//         resetForm();
-//       }
-//     } catch (error) {
-//       console.error('Error saving movie:', error);
-//     }
-//   };
-
-//   const handleDeleteMovie = async (movieId) => {
-//     if (confirm('Are you sure you want to delete this movie?')) {
-//       try {
-//         const response = await fetch(`/api/movies/${movieId}`, {
-//           method: 'DELETE',
-//         });
-        
-//         if (response.ok) {
-//           fetchDashboardData();
-//         }
-//       } catch (error) {
-//         console.error('Error deleting movie:', error);
-//       }
-//     }
-//   };
-
-//   const resetForm = () => {
-//     setFormData({
-//       title: '',
-//       category_id: '',
-//       genre: '',
-//       description: '',
-//       release_date: '',
-//       rating: '',
-//       poster_url: '',
-//       trailer_url: '',
-//       director: '',
-//       cast: ''
-//     });
-//     setSelectedMovie(null);
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-//       <Head title="Admin Dashboard" />
-      
-//       {/* Sidebar */}
-//       <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 w-64 shadow-lg transform transition-transform duration-300 ${
-//         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-//       }`}>
-//         {/* Logo */}
-//         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-//           <div className="flex items-center space-x-2">
-//             <Clapperboard className="w-8 h-8 text-red-500" />
-//             <span className="text-xl font-bold dark:text-white">JO BEST</span>
-//           </div>
-//           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
-//             <X className="w-6 h-6 text-gray-500" />
-//           </button>
-//         </div>
-
-//         {/* Navigation */}
-//         <nav className="p-4">
-//           <ul className="space-y-2">
-//             <li>
-//               <a href="#" className="flex items-center space-x-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
-//                 <BarChart2 className="w-5 h-5" />
-//                 <span>Dashboard</span>
-//               </a>
-//             </li>
-//             <li>
-//               <a href="#" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-//                 <Film className="w-5 h-5" />
-//                 <span>Movies</span>
-//               </a>
-//             </li>
-//             <li>
-//               <a href="#" className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-//                 <Users className="w-5 h-5" />
-//                 <span>Users</span>
-//               </a>
-//             </li>
-//           </ul>
-//         </nav>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className={`${isSidebarOpen ? 'lg:ml-64' : ''} transition-margin duration-300`}>
-//         {/* Top Bar */}
-//         <div className="bg-white dark:bg-gray-800 shadow-sm">
-//           <div className="flex items-center justify-between p-4">
-//             <button 
-//               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-//               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-//             >
-//               <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//             </button>
-
-//             <div className="flex items-center space-x-4">
-//               <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-//                 <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//               </button>
-//               <a 
-//                 href="/logout" 
-//                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-//               >
-//                 <LogOut className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//               </a>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Dashboard Content */}
-//         <div className="p-6">
-//           {/* Stats Cards */}
-//           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-//             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-//               <div className="flex items-center justify-between">
-//                 <h3 className="text-gray-500 dark:text-gray-400">Total Movies</h3>
-//                 <Film className="w-6 h-6 text-red-500" />
-//               </div>
-//               <p className="text-2xl font-bold mt-2 dark:text-white">{movies.length}</p>
-//             </div>
-
-//             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-//               <div className="flex items-center justify-between">
-//                 <h3 className="text-gray-500 dark:text-gray-400">Total Users</h3>
-//                 <Users className="w-6 h-6 text-red-500" />
-//               </div>
-//               <p className="text-2xl font-bold mt-2 dark:text-white">{totalUsers}</p>
-//             </div>
-
-//             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-//               <div className="flex items-center justify-between">
-//                 <h3 className="text-gray-500 dark:text-gray-400">Revenue</h3>
-//                 <Activity className="w-6 h-6 text-red-500" />
-//               </div>
-//               <p className="text-2xl font-bold mt-2 dark:text-white">${revenue}</p>
-//             </div>
-
-//             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-//               <div className="flex items-center justify-between">
-//                 <h3 className="text-gray-500 dark:text-gray-400">Active Users</h3>
-//                 <Users className="w-6 h-6 text-red-500" />
-//               </div>
-//               <p className="text-2xl font-bold mt-2 dark:text-white">{activeUsers}</p>
-//             </div>
-//           </div>
-
-//           {/* Movies Table */}
-//           <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-//             <div className="p-6">
-//               <div className="flex justify-between items-center mb-4">
-//                 <h2 className="text-lg font-semibold dark:text-white">Movies</h2>
-//                 <button
-//                   onClick={() => {
-//                     resetForm();
-//                     setShowModal(true);
-//                   }}
-//                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center"
-//                 >
-//                   <Plus className="w-4 h-4 mr-2" />
-//                   Add Movie
-//                 </button>
-//               </div>
-              
-//               <div className="overflow-x-auto">
-//                 <table className="w-full">
-//                   <thead>
-//                     <tr className="border-b dark:border-gray-700">
-//                       <th className="text-left p-4">Title</th>
-//                       <th className="text-left p-4">Genre</th>
-//                       <th className="text-left p-4">Rating</th>
-//                       <th className="text-left p-4">Release Date</th>
-//                       <th className="text-left p-4">Actions</th>
-//                     </tr>
-//                   </thead>
-//                   <tbody>
-//                     {movies.map((movie) => (
-//                       <tr key={movie.id} className="border-b dark:border-gray-700">
-//                         <td className="p-4 dark:text-white">{movie.title}</td>
-//                         <td className="p-4 dark:text-gray-300">{movie.genre}</td>
-//                         <td className="p-4 dark:text-gray-300">{movie.rating}</td>
-//                         <td className="p-4 dark:text-gray-300">{movie.release_date}</td>
-//                         <td className="p-4">
-//                           <div className="flex space-x-2">
-//                             <button
-//                               onClick={() => {
-//                                 setSelectedMovie(movie);
-//                                 setFormData(movie);
-//                                 setShowModal(true);
-//                               }}
-//                               className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-//                             >
-//                               <Edit className="w-4 h-4" />
-//                             </button>
-//                             <button
-//                               onClick={() => handleDeleteMovie(movie.id)}
-//                               className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-//                             >
-//                               <Trash className="w-4 h-4" />
-//                             </button>
-//                           </div>
-//                         </td>
-//                       </tr>
-//                     ))}
-//                   </tbody>
-//                 </table>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Movie Modal */}
-//       {showModal && (
-//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-//           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full">
-//             <div className="p-6">
-//               <div className="flex justify-between items-center mb-4">
-//                 <h3 className="text-lg font-semibold dark:text-white">
-//                   {selectedMovie ? 'Edit Movie' : 'Add New Movie'}
-//                 </h3>
-//                 <button onClick={() => setShowModal(false)}>
-//                   <X className="w-6 h-6" />
-//                 </button>
-//               </div>
-
-//               <form onSubmit={handleSubmit} className="space-y-4">
-//                 <div>
-//                   <label className="block text-sm font-medium mb-1">Title</label>
-//                   <input
-//                     type="text"
-//                     value={formData.title}
-//                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-//                     className="w-full p-2 border rounded-lg"
-//                     required
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-sm font-medium mb-1">Genre</label>
-//                   <input
-//                     type="text"
-//                     value={formData.genre}
-//                     onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-//                     className="w-full p-2 border rounded-lg"
-//                     required
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-sm font-medium mb-1">Description</label>
-//                   <textarea
-//                     value={formData.description}
-//                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-//                     className="w-full p-2 border rounded-lg"
-//                     rows={3}
-//                     required
-//                   />
-//                 </div>
-
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <label className="block text-sm font-medium mb-1">Release Date</label>
-//                     <input
-//                       type="date"
-//                       value={formData.release_date}
-//                       onChange={(e) => setFormData({ ...formData, release_date: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-medium mb-1">Rating</label>
-//                     <input
-//                       type="number"
-//                       min="0"
-//                       max="10"
-//                       step="0.1"
-//                       value={formData.rating}
-//                       onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                   <label className="block text-sm font-medium mb-1">Poster URL</label>
-//                     <input
-//                       type="text"
-//                       value={formData.poster_url}
-//                       onChange={(e) => setFormData({ ...formData, poster_url: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                       required
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-medium mb-1">Trailer URL</label>
-//                     <input
-//                       type="text"
-//                       value={formData.trailer_url}
-//                       onChange={(e) => setFormData({ ...formData, trailer_url: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div className="grid grid-cols-2 gap-4">
-//                   <div>
-//                     <label className="block text-sm font-medium mb-1">Director</label>
-//                     <input
-//                       type="text"
-//                       value={formData.director}
-//                       onChange={(e) => setFormData({ ...formData, director: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="block text-sm font-medium mb-1">Category ID</label>
-//                     <input
-//                       type="number"
-//                       value={formData.category_id}
-//                       onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-//                       className="w-full p-2 border rounded-lg"
-//                       required
-//                     />
-//                   </div>
-//                 </div>
-
-//                 <div>
-//                   <label className="block text-sm font-medium mb-1">Cast</label>
-//                   <textarea
-//                     value={formData.cast}
-//                     onChange={(e) => setFormData({ ...formData, cast: e.target.value })}
-//                     className="w-full p-2 border rounded-lg"
-//                     rows={2}
-//                   />
-//                 </div>
-
-//                 <div className="flex justify-end space-x-2 mt-6">
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowModal(false)}
-//                     className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-//                   >
-//                     Cancel
-//                   </button>
-//                   <button
-//                     type="submit"
-//                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-//                   >
-//                     {selectedMovie ? 'Update Movie' : 'Create Movie'}
-//                   </button>
-//                 </div>
-//               </form>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default AdminDashboard;
 import React, { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import { 
@@ -915,7 +485,6 @@ const AdminDashboard = () => {
     </div>
   );
 
-
   const UsersView = () => (
     <div className="p-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -978,7 +547,6 @@ const AdminDashboard = () => {
       </div>
     </div>
   );
-
   const CategoriesView = () => (
     <div className="p-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -1099,9 +667,12 @@ const AdminDashboard = () => {
 
   const MoviesView = () => (
     <div className="p-6">
-      {/* Search and Filter Bar */}
+  
+      {/* Search & Add Bar */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         <div className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          
+          {/* Search */}
           <div className="relative w-full sm:w-96">
             <input
               type="text"
@@ -1111,24 +682,16 @@ const AdminDashboard = () => {
               className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
             <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>
-          <button
-            onClick={() => {
-              resetMovieForm();
-              setShowMovieModal(true);
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Movie
-          </button>
+          </div>          
         </div>
       </div>
-
+  
       {/* Movies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredMovies.map((movie) => (
           <div key={movie.id} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            
+            {/* Poster */}
             <div className="aspect-w-16 aspect-h-9 bg-gray-200">
               {movie.poster_url ? (
                 <img 
@@ -1142,17 +705,19 @@ const AdminDashboard = () => {
                 </div>
               )}
             </div>
+  
+            {/* Movie Info */}
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-2 dark:text-white">{movie.title}</h3>
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                    {movie.genre}
-                  </span>
+                  <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{movie.genre}</span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                   {movie.description}
                 </p>
+  
+                {/* Actions */}
                 <div className="flex items-center justify-between mt-4">
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     Rating: {movie.rating}/10
@@ -1181,12 +746,14 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
-
+  
       {/* Movie Modal */}
       {showMovieModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full">
             <div className="p-6">
+  
+              {/* Modal Header */}
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold dark:text-white">
                   {selectedMovie ? 'Edit Movie' : 'Add New Movie'}
@@ -1195,8 +762,11 @@ const AdminDashboard = () => {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
+  
+              {/* Modal Form */}
               <form onSubmit={handleMovieSubmit} className="space-y-4">
+  
+                {/* Title */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Title</label>
                   <input
@@ -1207,7 +777,8 @@ const AdminDashboard = () => {
                     required
                   />
                 </div>
-
+  
+                {/* Genre */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Genre</label>
                   <input
@@ -1218,7 +789,8 @@ const AdminDashboard = () => {
                     required
                   />
                 </div>
-
+  
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Description</label>
                   <textarea
@@ -1229,7 +801,8 @@ const AdminDashboard = () => {
                     required
                   />
                 </div>
-
+  
+                {/* Release & Rating */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Release Date</label>
@@ -1255,7 +828,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
-
+  
+                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium mb-1">Category</label>
                   <select
@@ -1265,14 +839,13 @@ const AdminDashboard = () => {
                     required
                   >
                     <option value="">Select a category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
-
+  
+                {/* Poster & Trailer URLs */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Poster URL</label>
@@ -1293,7 +866,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
-
+  
+                {/* Director & Cast */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">Director</label>
@@ -1314,7 +888,8 @@ const AdminDashboard = () => {
                     />
                   </div>
                 </div>
-
+  
+                {/* Modal Actions */}
                 <div className="flex justify-end space-x-2 mt-6">
                   <button
                     type="button"
@@ -1400,7 +975,7 @@ const AdminDashboard = () => {
               </button>
             </li>
             <li>
-            <button
+            {/* <button
   onClick={() => setActiveView('categories')}
   className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
     activeView === 'categories'
@@ -1410,7 +985,7 @@ const AdminDashboard = () => {
 >
 <SquareStack className="w-5 h-5" />
   <span>Categories</span>
-</button>
+</button> */}
 
 </li>
 <li>
@@ -1439,12 +1014,12 @@ const AdminDashboard = () => {
     <span>Profile</span>
   </button>
 </li>
-            <li>
+            {/* <li>
               <button className="w-full flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
               </button>
-            </li>
+            </li> */}
           </ul>
         </nav>
       </div>
@@ -1487,7 +1062,7 @@ const AdminDashboard = () => {
         {activeView === 'dashboard' ? (
           <div className="p-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-gray-500 dark:text-gray-400">Total Movies</h3>
@@ -1503,21 +1078,12 @@ const AdminDashboard = () => {
                 </div>
                 <p className="text-2xl font-bold mt-2 dark:text-white">{totalUsers}</p>
               </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-gray-500 dark:text-gray-400">Revenue</h3>
-                  <Activity className="w-6 h-6 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold mt-2 dark:text-white">$44.97</p>
-              </div>
-
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-gray-500 dark:text-gray-400">Total Watches</h3>
                   <Eye className="w-6 h-6 text-red-500" />
                 </div>
-                <p className="text-2xl font-bold mt-2 dark:text-white">13</p>
+                <p className="text-2xl font-bold mt-2 dark:text-white">0</p>
               </div>
             </div>
 
@@ -1573,147 +1139,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
-// import React, { useState, useEffect } from 'react';
-// import { Users, Film, Activity, Settings, LogOut, Menu, X, Bell, Clapperboard } from 'lucide-react';
-// import { Head } from '@inertiajs/react';
-// import DashboardView from './DashboardView';
-// import MoviesView from './MoviesView';
-// import UsersView from './UsersView';
-// import CategoriesView from './CategoriesView';
-// import ContactsView from './ContactsView';
-// import ProfileView from './ProfileView';
-// import { SquareStack, MessageSquare, User } from 'lucide-react';
-
-// const AdminDashboard = () => {
-//   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-//   const [activeView, setActiveView] = useState('dashboard');
-//   useEffect(() => {
-//     fetchDashboardData();
-//   }, []);
-
-//   const fetchDashboardData = async () => {
-//     try {
-//       const headers = {
-//         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-//         'Accept': 'application/json',
-//       };
-
-//       const [moviesData, usersData] = await Promise.all([
-//         fetch('/api/movies', { headers }).then(res => res.json()),
-//         fetch('/api/users', { headers }).then(res => res.json())
-//       ]);
-
-//       setMovies(moviesData);
-//       setTotalUsers(usersData.data.length);
-//       setActiveUsers(usersData.data.filter(user => user.is_active).length);
-//       setRevenue(12426); // Example fixed revenue
-//     } catch (error) {
-//       console.error('Error fetching dashboard data:', error);
-//       alert('Error fetching data. Please try again.');
-//     }
-//   };
-
-//   const renderActiveView = () => {
-//     switch (activeView) {
-//       case 'dashboard':
-//         return <DashboardView />;
-//       case 'movies':
-//         return <MoviesView />;
-//       case 'users':
-//         return <UsersView />;
-//       case 'categories':
-//         return <CategoriesView />;
-//       case 'contacts':
-//         return <ContactsView />;
-//       case 'profile':
-//         return <ProfileView />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-//       <Head title={activeView.charAt(0).toUpperCase() + activeView.slice(1)} />
-      
-//       {/* Sidebar */}
-//       <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 w-64 shadow-lg transform transition-transform duration-300 ${
-//         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-//       }`}>
-//         {/* Logo */}
-//         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-//           <div className="flex items-center space-x-2">
-//             <Clapperboard className="w-8 h-8 text-red-500" />
-//             <span className="text-xl font-bold dark:text-white">JO BEST</span>
-//           </div>
-//           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
-//             <X className="w-6 h-6 text-gray-500" />
-//           </button>
-//         </div>
-
-//         {/* Navigation */}
-//         <nav className="p-4">
-//           <ul className="space-y-2">
-//             {[
-//               { id: 'dashboard', icon: BarChart2, label: 'Dashboard' },
-//               { id: 'movies', icon: Film, label: 'Movies' },
-//               { id: 'users', icon: Users, label: 'Users' },
-//               { id: 'categories', icon: SquareStack, label: 'Categories' },
-//               { id: 'contacts', icon: MessageSquare, label: 'Contacts' },
-//               { id: 'profile', icon: User, label: 'Profile' },
-//               { id: 'settings', icon: Settings, label: 'Settings' }
-//             ].map(({ id, icon: Icon, label }) => (
-//               <li key={id}>
-//                 <button
-//                   onClick={() => setActiveView(id)}
-//                   className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-//                     activeView === id
-//                       ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-//                       : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-//                   }`}
-//                 >
-//                   <Icon className="w-5 h-5" />
-//                   <span>{label}</span>
-//                 </button>
-//               </li>
-//             ))}
-//           </ul>
-//         </nav>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className={`${isSidebarOpen ? 'lg:ml-64' : ''} transition-margin duration-300`}>
-//         {/* Top Bar */}
-//         <div className="bg-white dark:bg-gray-800 shadow-sm">
-//           <div className="flex items-center justify-between p-4">
-//             <button 
-//               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-//               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-//             >
-//               <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//             </button>
-
-//             <div className="flex items-center space-x-4">
-//               <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 relative">
-//                 <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//                 <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-//               </button>
-//               <a 
-//                 href="/logout" 
-//                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-//               >
-//                 <LogOut className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-//               </a>
-//             </div>
-//           </div>
-//         </div>
-
-//         {/* Render Active View */}
-//         {renderActiveView()}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default AdminDashboard;

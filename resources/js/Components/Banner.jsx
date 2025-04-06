@@ -25,10 +25,12 @@ const Banner = ({ isDarkMode }) => {
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
+    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true); // Flag to control auto slide
+    const [timeRemaining, setTimeRemaining] = useState(8); // Time until next movie in seconds
 
     const TMDB_API_KEY = "ba4493b817fe50ef7a9d2c61203c7289";
     const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-    const ROTATION_INTERVAL = 8000; // 5 seconds
+    const ROTATION_INTERVAL = 8000; // 8 seconds
 
     const fetchMovies = async () => {
         try {
@@ -70,15 +72,35 @@ const Banner = ({ isDarkMode }) => {
         fetchMovies();
     }, []);
 
+    // Timer countdown effect
     useEffect(() => {
-        if (movies.length === 0) return;
+        if (!autoSlideEnabled || movies.length === 0) return;
+
+        // Reset timer when movie changes
+        setTimeRemaining(ROTATION_INTERVAL / 1000);
+
+        const timerInterval = setInterval(() => {
+            setTimeRemaining(prev => {
+                if (prev <= 1) {
+                    return ROTATION_INTERVAL / 1000;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(timerInterval);
+    }, [currentMovieIndex, autoSlideEnabled, movies.length]);
+
+    // Auto-rotation effect
+    useEffect(() => {
+        if (!autoSlideEnabled || movies.length === 0) return;
 
         const interval = setInterval(() => {
             setCurrentMovieIndex((prev) => (prev + 1) % movies.length);
         }, ROTATION_INTERVAL);
 
         return () => clearInterval(interval);
-    }, [movies]);
+    }, [movies, autoSlideEnabled]);
 
     const currentMovie = movies[currentMovieIndex];
 
@@ -92,9 +114,7 @@ const Banner = ({ isDarkMode }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
-                isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'
-            }`}
+            className={`flex items-center space-x-2 px-3 py-1 rounded-full ${isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'}`}
         >
             <Icon className="w-4 h-4" />
             <span className="text-sm">{text}</span>
@@ -107,6 +127,16 @@ const Banner = ({ isDarkMode }) => {
 
     const handleNextMovie = () => {
         setCurrentMovieIndex((prev) => (prev + 1) % movies.length);
+    };
+
+    const handleTrailerOpen = () => {
+        setIsTrailerOpen(true);
+        setAutoSlideEnabled(false); // Disable auto slide when trailer is open
+    };
+
+    const handleTrailerClose = () => {
+        setIsTrailerOpen(false);
+        setAutoSlideEnabled(true); // Re-enable auto slide when trailer is closed
     };
 
     if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
@@ -134,14 +164,48 @@ const Banner = ({ isDarkMode }) => {
                     />
                     {/* Gradient Overlay */}
                     <div
-                        className={`absolute inset-0 ${
-                            isDarkMode
-                                ? 'bg-gradient-to-t from-gray-900 via-gray-900/90 to-gray-900/60'
-                                : 'bg-gradient-to-t from-white via-white/90 to-white/60'
-                        }`}
+                        className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-t from-gray-900 via-gray-900/90 to-gray-900/60' : 'bg-gradient-to-t from-white via-white/90 to-white/60'}`}
                     />
                 </motion.div>
             </AnimatePresence>
+
+            {/* Timer Bar */}
+            {autoSlideEnabled && (
+                <div className="absolute top-0 left-0 right-0 z-20 h-1 bg-gray-800/30">
+                    <motion.div
+                        key={`timer-${currentMovieIndex}`}
+                        className="h-full bg-red-600"
+                        initial={{ width: "0%" }}
+                        animate={{ width: "100%" }}
+                        transition={{ 
+                            duration: timeRemaining,
+                            ease: "linear"
+                        }}
+                    />
+                </div>
+            )}
+
+            {/* Timer Display */}
+            {autoSlideEnabled && (
+                <motion.div 
+                    className={`absolute bottom-7 left-12  z-300 px-5 py-2 rounded-full ${isDarkMode ? 'bg-gray-800/80 text-white' : 'bg-white/80 text-gray-900'} flex items-center space-x-2`}
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    <Clock className="w-4 h-4" />
+                    <div className="flex items-center">
+                        <motion.span 
+                            key={timeRemaining}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-sm font-medium"
+                        >
+                            {movies.length > 0 && `العرض التالي في ${timeRemaining} ثواني`}
+                        </motion.span>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Content */}
             <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
@@ -156,9 +220,7 @@ const Banner = ({ isDarkMode }) => {
                     >
                         <div className="space-y-4">
                             <motion.h1
-                                className={`text-6xl font-bold ${
-                                    isDarkMode ? 'text-white' : 'text-gray-900'
-                                }`}
+                                className={`text-6xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
                             >
                                 {currentMovie.title}
                             </motion.h1>
@@ -180,28 +242,20 @@ const Banner = ({ isDarkMode }) => {
                         </div>
 
                         <motion.p
-                            className={`text-lg max-w-2xl ${
-                                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                            }`}
+                            className={`text-lg max-w-2xl ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
                         >
                             {currentMovie.overview}
                         </motion.p>
 
                         <div className="space-y-2">
-                            <h3 className={`text-lg font-semibold ${
-                                isDarkMode ? 'text-white' : 'text-gray-900'
-                            }`}>
+                            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                 Featured Cast
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {currentMovie.cast.map((actor) => (
                                     <span
                                         key={actor.id}
-                                        className={`px-3 py-1 rounded-full text-sm ${
-                                            isDarkMode
-                                                ? 'bg-gray-800/80 text-gray-300'
-                                                : 'bg-gray-200/80 text-gray-700'
-                                        }`}
+                                        className={`px-3 py-1 rounded-full text-sm ${isDarkMode ? 'bg-gray-800/80 text-gray-300' : 'bg-gray-200/80 text-gray-700'}`}
                                     >
                                         {actor.name}
                                     </span>
@@ -213,35 +267,13 @@ const Banner = ({ isDarkMode }) => {
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => setIsTrailerOpen(true)}
+                                onClick={handleTrailerOpen}
                                 className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
                             >
                                 <Play className="w-5 h-5 group-hover:animate-pulse" />
                                 <span>Watch Trailer</span>
                                 <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
                             </motion.button>
-
-                            {/* <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setIsLiked(!isLiked)}
-                                className={`p-3 rounded-full ${
-                                    isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'
-                                } ${isLiked ? 'text-red-500' : ''}`}
-                            >
-                                <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                            </motion.button> */}
-
-                            {/* <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => setIsBookmarked(!isBookmarked)}
-                                className={`p-3 rounded-full ${
-                                    isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'
-                                } ${isBookmarked ? 'text-blue-500' : ''}`}
-                            >
-                                <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
-                            </motion.button> */}
                         </div>
                     </motion.div>
 
@@ -262,7 +294,11 @@ const Banner = ({ isDarkMode }) => {
                                 alt={currentMovie.title}
                                 className="w-full h-full object-cover"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            
+                            {/* Movie Index Indicator */}
+                            <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-md text-xs">
+                                {currentMovieIndex + 1} / {movies.length}
+                            </div>
                         </motion.div>
 
                         {/* Navigation Buttons */}
@@ -271,19 +307,32 @@ const Banner = ({ isDarkMode }) => {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={handlePrevMovie}
-                                className={`p-3 rounded-full ${
-                                    isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'
-                                }`}
+                                className={`p-3 rounded-full ${isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'}`}
                             >
                                 <SkipBack className="w-5 h-5" />
                             </motion.button>
+                            
+                            {/* Movie Progress Dots */}
+                            <div className="flex items-center space-x-2 px-4">
+                                {movies.map((_, idx) => (
+                                    <motion.div
+                                        key={idx}
+                                        className={`h-2 rounded-full ${idx === currentMovieIndex ? 'w-6 bg-red-600' : 'w-2 bg-gray-500/50'}`}
+                                        initial={false}
+                                        animate={{ 
+                                            width: idx === currentMovieIndex ? 24 : 8,
+                                            backgroundColor: idx === currentMovieIndex ? '#dc2626' : '#6b7280' 
+                                        }}
+                                        transition={{ duration: 0.3 }}
+                                    />
+                                ))}
+                            </div>
+                            
                             <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={handleNextMovie}
-                                className={`p-3 rounded-full ${
-                                    isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'
-                                }`}
+                                className={`p-3 rounded-full ${isDarkMode ? 'bg-gray-800/80' : 'bg-gray-200/80'}`}
                             >
                                 <SkipForward className="w-5 h-5" />
                             </motion.button>
@@ -291,6 +340,32 @@ const Banner = ({ isDarkMode }) => {
                     </motion.div>
                 </div>
             </div>
+
+            {/* Next Movie Preview */}
+            {/* {movies.length > 1 && autoSlideEnabled && (
+                <motion.div
+                    className="absolute top-12 right-8 z-20 flex items-center space-x-4"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800/80' : 'bg-white/80'} flex items-center space-x-3`}>
+                        <div className="w-16 h-24 rounded-md overflow-hidden">
+                            <img 
+                                src={`https://image.tmdb.org/t/p/w200${movies[(currentMovieIndex + 1) % movies.length].poster_path}`} 
+                                alt="Next Movie" 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <div className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>العرض التالي</div>
+                            <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                {movies[(currentMovieIndex + 1) % movies.length].title}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+            )} */}
 
             {/* Trailer Modal */}
             <AnimatePresence>
@@ -308,7 +383,7 @@ const Banner = ({ isDarkMode }) => {
                             className="relative w-[80vw] h-[80vh] rounded-3xl overflow-hidden bg-black shadow-2xl"
                         >
                             <button
-                                onClick={() => setIsTrailerOpen(false)}
+                                onClick={handleTrailerClose}
                                 className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
                             >
                                 <X className="w-5 h-5" />

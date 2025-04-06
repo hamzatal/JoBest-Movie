@@ -4,15 +4,15 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use App\Services\GeminiChatService;
+use App\Services\ChatGPTServices;
 
 class ChatBotController extends Controller
 {
-    protected $geminiChatService;
+    protected $chatGPTService;
 
-    public function __construct(GeminiChatService $geminiChatService)
+    public function __construct(ChatGPTServices $chatGPTService)
     {
-        $this->geminiChatService = $geminiChatService;
+        $this->chatGPTService = $chatGPTService;
     }
 
     // Render ChatBot page
@@ -30,8 +30,13 @@ class ChatBotController extends Controller
             return response()->json(['error' => 'Message is required'], 400);
         }
 
-        $response = $this->geminiChatService->askGemini($message);
+        $response = $this->chatGPTService->askChatGPT($message);
 
-        return response()->json(['response' => $response]);
+        // Extract the response content
+        $chatGPTResponse = $response['choices'][0]['message']['content'] ?? 'No response from ChatGPT.';
+
+        return response()->json([
+            'response' => $chatGPTResponse,
+        ]);
     }
 }

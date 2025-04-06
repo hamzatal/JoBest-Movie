@@ -2,19 +2,20 @@ import React from "react";
 import { Home, Clapperboard, Linkedin, Github } from "lucide-react";
 import { Link } from "@inertiajs/react";
 
-const TeamMember = ({ name, role, linkedin, github }) => (
-    <div className="bg-gray-800 bg-opacity-70 rounded-xl p-8 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl max-w-2xl mx-auto">
-        <div className="w-40 h-40 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-5xl font-bold text-white shadow-lg">
-            {name.split(' ')[0][0] + name.split(' ')[1][0]}
+const TeamMember = ({ name, role, program, studentId, linkedin, github }) => (
+    <div className="bg-gray-800 bg-opacity-70 rounded-xl p-6 text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl mx-auto mb-6">
+        <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+            {name.split(' ')[0][0] + name.split(' ')[name.split(' ').length - 1][0]}
         </div>
-        <h3 className="text-3xl font-bold mb-3">{name}</h3>
-        <div className="w-24 h-1 bg-red-500 mx-auto mb-4"></div>
-        <p className="text-xl text-gray-300 mb-6 font-medium">{role}</p>
-        <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-            Passionate developer dedicated to creating exceptional movie streaming experiences. 
-            Bringing technical expertise and creativity to make JO BEST the ultimate destination for cinema lovers.
+        <h3 className="text-2xl font-bold mb-2">{name}</h3>
+        <div className="w-16 h-1 bg-red-500 mx-auto mb-3"></div>
+        <p className="text-lg text-gray-300 mb-1 font-medium">{role}</p>
+        <p className="text-base text-gray-400 mb-1">{program}</p>
+        <p className="text-base text-gray-400 mb-4">ID: {studentId}</p>
+        <p className="text-gray-400 mb-4 mx-auto text-sm">
+            Passionate developer dedicated to creating exceptional movie streaming experiences.
         </p>
-        <div className="flex justify-center space-x-6">
+        <div className="flex justify-center space-x-4">
             {linkedin && (
                 <a 
                     href={linkedin} 
@@ -22,7 +23,7 @@ const TeamMember = ({ name, role, linkedin, github }) => (
                     rel="noopener noreferrer" 
                     className="text-white hover:text-red-500 transition-colors transform hover:scale-110"
                 >
-                    <Linkedin className="w-8 h-8" />
+                    <Linkedin className="w-6 h-6" />
                 </a>
             )}
             {github && (
@@ -32,7 +33,7 @@ const TeamMember = ({ name, role, linkedin, github }) => (
                     rel="noopener noreferrer" 
                     className="text-white hover:text-red-500 transition-colors transform hover:scale-110"
                 >
-                    <Github className="w-8 h-8" />
+                    <Github className="w-6 h-6" />
                 </a>
             )}
         </div>
@@ -42,16 +43,44 @@ const TeamMember = ({ name, role, linkedin, github }) => (
 const AboutUsPage = () => {
     const movieBackground = "/images/background.jpg";
     
-    const teamMember = {
-        name: "Hamza Al-Tal",
-        role: "Lead Developer",
-        linkedin: "https://www.linkedin.com/in/hamza-tal/",
-        github: "https://github.com/hamzatal"
-    };
+    const teamMembers = [
+        {
+            name: "Saleh Qasim Hassan Al-Jarrah",
+            role: "Team Member",
+            program: "Software Engineering",
+            studentId: "202120120",
+            linkedin: "https://www.linkedin.com/",
+            github: "https://github.com/"
+        },
+        {
+            name: "Qusay Murad Fathi Abu Aqouleh",
+            role: "Team Member",
+            program: "Computer Science",
+            studentId: "202120221",
+            linkedin: "https://www.linkedin.com/",
+            github: "https://github.com/"
+        },
+        {
+            name: "Hazm Ishaq Al-Khasawneh",
+            role: "Team Member",
+            program: "Software Engineering",
+            studentId: "202120216",
+            linkedin: "https://www.linkedin.com/",
+            github: "https://github.com/"
+        },
+        {
+            name: "Omar Adnan Mahmoud Salman",
+            role: "Team Member",
+            program: "Computer Science",
+            studentId: "202110129",
+            linkedin: "https://www.linkedin.com/",
+            github: "https://github.com/"
+        }
+    ];
 
     return (
         <div className="min-h-screen bg-black text-white relative overflow-hidden">
-            {/* Background with Opacity */}
+            {/* Background with Opacity - Keeping original size */}
             <div
                 className="absolute inset-0 bg-cover bg-center opacity-40 z-0"
                 style={{
@@ -103,14 +132,21 @@ const AboutUsPage = () => {
 
                     {/* Team Section */}
                     <div className="w-full max-w-6xl mb-16">
-                        <h2 className="text-4xl font-bold mb-4 text-center">Meet Our <span className="text-red-500">Developer</span></h2>
+                        <h2 className="text-4xl font-bold mb-4 text-center">Meet Our <span className="text-red-500">Team</span></h2>
                         <p className="text-gray-400 text-center mb-12 text-xl">The talent behind JO BEST's innovation</p>
-                        <TeamMember 
-                            name={teamMember.name}
-                            role={teamMember.role}
-                            linkedin={teamMember.linkedin}
-                            github={teamMember.github}
-                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {teamMembers.map((member, index) => (
+                                <TeamMember 
+                                    key={index}
+                                    name={member.name}
+                                    role={member.role}
+                                    program={member.program}
+                                    studentId={member.studentId}
+                                    linkedin={member.linkedin}
+                                    github={member.github}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

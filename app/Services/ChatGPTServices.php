@@ -1,12 +1,11 @@
 <?php
-
 namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\DB;
 
-class GeminiChatService
+class ChatGPTServices
 {
     protected $client;
     protected $apiKey;
@@ -14,7 +13,7 @@ class GeminiChatService
     public function __construct()
     {
         $this->client = new Client();
-        $this->apiKey = env('GEMINI_API_KEY');
+        $this->apiKey = env('OPENAI_API_KEY');
     }
 
     /**
@@ -77,15 +76,19 @@ class GeminiChatService
      */
     public function searchMovie($movieId)
     {
+        // Get movie details
         $movieDetails = $this->getMovieDetails($movieId);
 
+        // If movie exists
         if ($movieDetails['exists']) {
+            // Prepare response for existing movie
             $response = [
                 'status' => 'found',
                 'message' => 'Movie is available on our site!',
                 'movie' => $movieDetails
             ];
 
+            // Find similar movies
             $similarMovies = $this->findSimilarMovies(
                 $movieDetails['genre'],
                 $movieDetails['id']
@@ -96,8 +99,10 @@ class GeminiChatService
             return $response;
         }
 
+        // If movie does not exist
         try {
-            $aiSuggestion = $this->askGemini(
+            // Use ChatGPT to suggest a similar movie
+            $aiSuggestion = $this->askChatGPT(
                 "Suggest a similar movie to the movie with ID $movieId. " .
                 "Provide a brief description and why it might be interesting."
             );
@@ -105,7 +110,7 @@ class GeminiChatService
             return [
                 'status' => 'not_found',
                 'message' => 'Unfortunately, this movie is not in our database.',
-                'ai_suggestion' => $aiSuggestion
+                'ai_suggestion' => $aiSuggestion['choices'][0]['message']['content']
             ];
         } catch (\Exception $e) {
             return [
@@ -117,24 +122,40 @@ class GeminiChatService
     }
 
     /**
-     * Ask Google Gemini for a query
+     * Ask ChatGPT for a movie-related query
      *
      * @param string $message
-     * @return string
+     * @return array
      */
-    public function askGemini($message)
+    public function askChatGPT($message)
     {
         try {
-            $response = $this->client->post('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' . $this->apiKey, [
-                'verify' => false,
-                'json' => ['contents' => [['parts' => [['text' => $message]]]]],
-                'headers' => ['Content-Type' => 'application/json'],
+            $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => 'gpt-4',
+                    'messages' => [
+                        ['role' => 'system', 'content' => 'You are a movie recommendation assistant.'],
+                        ['role' => 'user', 'content' => $message],
+                    ],
+                    'max_tokens' => 200,
+                    'temperature' => 0.7,
+                ],
             ]);
 
             $responseBody = json_decode($response->getBody()->getContents(), true);
-            return $responseBody['candidates'][0]['content']['parts'][0]['text'] ?? 'No response from Gemini API.';
+
+            if (isset($responseBody['choices'][0]['message']['content'])) {
+                return $responseBody;
+            }
+
+            return ['choices' => [['message' => ['content' => 'No meaningful response from ChatGPT.']]]];
+
         } catch (RequestException $e) {
-            throw new \Exception('Error connecting to Gemini API: ' . $e->getMessage());
+            throw new \Exception('Error connecting to OpenAI API: ' . $e->getMessage());
         }
     }
 }

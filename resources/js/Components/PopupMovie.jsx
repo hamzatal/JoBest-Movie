@@ -74,7 +74,7 @@ const MoviePopup = ({
         
                 if (response.status === 201) {
                     setIsAdded(!isAdded);
-                    onAddToWatchlist(movie); // تحديث حالة الأماني في الواجهة الأمامية
+                    onAddToWatchlist(movie);
                 }
             } catch (error) {
                 console.error("Error adding to watchlist:", error);

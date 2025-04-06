@@ -9,20 +9,17 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatBotController;
-use App\Http\Controllers\SubscriptionController;
-// use App\Http\Controllers\MohammadController;
 use App\Http\Controllers\WatchedMoviesController;
+use App\Http\Controllers\SubscriptionController;
 
 
+Route::post('/chatbot', [ChatBotController::class, 'chatbot']); // Updated to 'chatbot'
 
 /*
 |----------------------------------------------------------------------
 | API Routes
 |----------------------------------------------------------------------
 */
-
-
-Route::post('/chatbot', [ChatBotController::class, 'chatbot']); // Updated to 'chatbot'
 
 Route::get('movies/chatgpt-recommendations/{userId}', [MovieController::class, 'chatGptRecommendations']);
 
@@ -44,18 +41,18 @@ Route::get('contacts/{contact}', [ContactController::class, 'show']);
 Route::post('contacts', [ContactController::class, 'store']);
 Route::delete('contacts/{contact}', [ContactController::class, 'destroy']);
 
-// Movies Routes
-Route::get('movies', [MovieController::class, 'index']);
-Route::post('movies', [MovieController::class, 'store']);
-Route::get('movie', [MovieController::class, 'show']);
-Route::get('movies/featured', [MovieController::class, 'featured']);
-Route::get('movies/trending', [MovieController::class, 'trending']);
-Route::get('movies/genre/{genre}', [MovieController::class, 'byGenre']);
-Route::get('movies/search/{query}', [MovieController::class, 'search']);
-Route::put('movies/{movie}', [MovieController::class, 'update']);
-Route::delete('movies/{movie}', [MovieController::class, 'destroy']);
-// New route for fetching a random movie
-Route::get('movies/random', [MovieController::class, 'random']);
+// // Movies Routes
+// Route::get('movies', [MovieController::class, 'index']);
+// Route::post('movies', [MovieController::class, 'store']);
+// Route::get('movie', [MovieController::class, 'show']);
+// Route::get('movies/featured', [MovieController::class, 'featured']);
+// Route::get('movies/trending', [MovieController::class, 'trending']);
+// Route::get('movies/genre/{genre}', [MovieController::class, 'byGenre']);
+// Route::get('movies/search/{query}', [MovieController::class, 'search']);
+// Route::put('movies/{movie}', [MovieController::class, 'update']);
+// Route::delete('movies/{movie}', [MovieController::class, 'destroy']);
+// // New route for fetching a random movie
+// Route::get('movies/random', [MovieController::class, 'random']);
 
 // Favorite Routes
 Route::get('favorites', [FavoriteController::class, 'index']);
@@ -83,5 +80,4 @@ Route::delete('users/{user}', [UserController::class, 'destroy']);
 
 Route::get('/subscriptions/revenue', [SubscriptionController::class, 'getTotalRevenue']);
 
-// Route::get('users/{user}/reviews', [MohammadController::class, 'mohammad']);
 

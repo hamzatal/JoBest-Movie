@@ -22,6 +22,7 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
         const query = e.target.value;
         setSearchQuery(query);
 
+        // إذا كان النص فارغًا، نعيد التهيئة ونوقف البحث
         if (query.trim().length === 0) {
             setSearchResults([]);
             onSearchResults([]);
@@ -29,15 +30,17 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
         }
 
         setIsSearching(true);
+
+        // تأكد من استخدام الرابط الصحيح مع الـ API Key ودمج الاستعلام
         axios
-            .get(`/movies/search/${query}`)
+            .get(`https://api.themoviedb.org/3/search/movie?api_key=ba4493b817fe50ef7a9d2c61203c7289&query=${query}`)
             .then((response) => {
-                const results = response.data.data || [];
+                const results = response.data.results || []; // تأكد أن البيانات تأتي من response.data.results
                 setSearchResults(results);
                 onSearchResults(results);
             })
-            .catch(() => {
-                console.error("Search failed");
+            .catch((error) => {
+                console.error("Search failed:", error);
                 setSearchResults([]);
                 onSearchResults([]);
             })
@@ -86,6 +89,11 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
         } catch (err) {
             console.error("Failed to update watchlist:", err);
         }
+    };
+
+    // تنسيق التقييم ليظهر كعدد عشري مكون من رقمين
+    const formatRating = (rating) => {
+        return rating ? rating.toFixed(1) : "N/A"; // تحويل التقييم لرقم عشري مكون من رقم واحد بعد الفاصلة
     };
 
     return (
@@ -173,19 +181,17 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
                                                 key={movie.id}
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() =>
-                                                    handleMovieSelect(movie)
-                                                }
+                                                onClick={() => handleMovieSelect(movie)}
                                                 className="px-4 py-3 cursor-pointer flex items-center space-x-4"
                                             >
                                                 <div className="relative">
                                                     <img
-                                                        src={movie.poster_url}
+                                                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} // Full URL for the poster image
                                                         alt={movie.title}
                                                         className="w-14 h-20 object-cover rounded-lg"
                                                     />
                                                     <div className="absolute bottom-0 right-0 bg-yellow-400 text-xs text-black font-bold px-1 rounded">
-                                                        {movie.rating}
+                                                        {formatRating(movie.vote_average)} {/* عرض التقييم بشكل رقم عشري */}
                                                     </div>
                                                 </div>
                                                 <div className="flex-1">
@@ -193,8 +199,9 @@ const LiveSearch = ({ onSearchResults, isDarkMode }) => {
                                                         {movie.title}
                                                     </h3>
                                                     <div className="text-sm truncate">
-                                                        Popularity:{" "}
-                                                        {movie.rating}/10
+                                                    <div className="text-sm truncate">
+    Popularity: {formatRating(movie.vote_average)} / 10 {/* عرض التقييم بالنظام العشري */}
+</div>
                                                     </div>
                                                 </div>
                                             </motion.div>

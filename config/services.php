@@ -14,10 +14,14 @@ return [
     |
     */
 
-        'gemini' => [
-            'api_key' => env('GEMINI_API_KEY'),
+        // 'gemini' => [
+        //     'api_key' => env('GEMINI_API_KEY'),
+        // ],
+
+   'deepseek' => [
+            'api_key' => env('DEEPSEEK_API_KEY'),
         ],
-   
+        
     
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),

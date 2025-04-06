@@ -294,6 +294,7 @@ const LoginPage = () => {
                             </Link>
                             <span> / </span>
                             <Link
+                            
     href={route("admin.login")} 
     className={`font-medium hover:underline ${
         isDarkMode
@@ -302,7 +303,8 @@ const LoginPage = () => {
     }`}
 >
     Admin ?
-                            </Link>
+</Link>
+
                         </p>
                         
                     </form>
