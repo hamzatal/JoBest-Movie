@@ -38,10 +38,12 @@ const MoviesGrid = ({
     }, [apiUrl]);
 
     const addToWishlist = (movie) => {
-        const updatedWishlist = [...wishlist, movie];
-        setWishlist(updatedWishlist);
-        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-        onAddToWishlist?.(movie);
+        if (!wishlist.some((m) => m.id === movie.id)) {
+            const updatedWishlist = [...wishlist, movie];
+            setWishlist(updatedWishlist);
+            localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+            onAddToWishlist(movie);
+        }
     };
 
     const removeFromWishlist = (movieId) => {
@@ -117,9 +119,7 @@ const MoviesGrid = ({
                             key={movie.id}
                             movie={movie}
                             isDarkMode={isDarkMode}
-                            isInWishlist={wishlist.some(
-                                (m) => m.id === movie.id
-                            )}
+                            isInWishlist={wishlist.some((m) => m.id === movie.id)}
                             addToWishlist={addToWishlist}
                             removeFromWishlist={removeFromWishlist}
                         />

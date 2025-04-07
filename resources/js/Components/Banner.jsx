@@ -26,7 +26,6 @@ const Banner = ({ isDarkMode }) => {
     const [isBookmarked, setIsBookmarked] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [autoSlideEnabled, setAutoSlideEnabled] = useState(true); // Flag to control auto slide
-    const [timeRemaining, setTimeRemaining] = useState(8); // Time until next movie in seconds
 
     const TMDB_API_KEY = "ba4493b817fe50ef7a9d2c61203c7289";
     const TMDB_BASE_URL = "https://api.themoviedb.org/3";
@@ -72,28 +71,8 @@ const Banner = ({ isDarkMode }) => {
         fetchMovies();
     }, []);
 
-    // Timer countdown effect
     useEffect(() => {
-        if (!autoSlideEnabled || movies.length === 0) return;
-
-        // Reset timer when movie changes
-        setTimeRemaining(ROTATION_INTERVAL / 1000);
-
-        const timerInterval = setInterval(() => {
-            setTimeRemaining(prev => {
-                if (prev <= 1) {
-                    return ROTATION_INTERVAL / 1000;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timerInterval);
-    }, [currentMovieIndex, autoSlideEnabled, movies.length]);
-
-    // Auto-rotation effect
-    useEffect(() => {
-        if (!autoSlideEnabled || movies.length === 0) return;
+        if (!autoSlideEnabled || movies.length === 0) return; // Don't rotate if auto slide is disabled
 
         const interval = setInterval(() => {
             setCurrentMovieIndex((prev) => (prev + 1) % movies.length);
@@ -169,44 +148,6 @@ const Banner = ({ isDarkMode }) => {
                 </motion.div>
             </AnimatePresence>
 
-            {/* Timer Bar */}
-            {autoSlideEnabled && (
-                <div className="absolute top-0 left-0 right-0 z-20 h-1 bg-gray-800/30">
-                    <motion.div
-                        key={`timer-${currentMovieIndex}`}
-                        className="h-full bg-red-600"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ 
-                            duration: timeRemaining,
-                            ease: "linear"
-                        }}
-                    />
-                </div>
-            )}
-
-            {/* Timer Display */}
-            {autoSlideEnabled && (
-                <motion.div 
-                    className={`absolute bottom-7 left-12  z-300 px-5 py-2 rounded-full ${isDarkMode ? 'bg-gray-800/80 text-white' : 'bg-white/80 text-gray-900'} flex items-center space-x-2`}
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <Clock className="w-4 h-4" />
-                    <div className="flex items-center">
-                        <motion.span 
-                            key={timeRemaining}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-sm font-medium"
-                        >
-                            {movies.length > 0 && `العرض التالي في ${timeRemaining} ثواني`}
-                        </motion.span>
-                    </div>
-                </motion.div>
-            )}
-
             {/* Content */}
             <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
                 <div className="grid md:grid-cols-3 gap-8 items-center">
@@ -230,10 +171,13 @@ const Banner = ({ isDarkMode }) => {
                                     icon={Star}
                                     text={`${currentMovie.vote_average.toFixed(1)}/10`}
                                 />
-                                <MovieInfoBadge
-                                    icon={Calendar}
-                                    text={currentMovie.release_date.split('-')[0]}
+                               <MovieInfoBadge
+    icon={Calendar}
+    text={currentMovie.release_date}  // مثلاً: "2023-05-15"
+
                                 />
+                               
+
                                 <MovieInfoBadge
                                     icon={Clock}
                                     text={formatRuntime(currentMovie.runtime)}
@@ -294,11 +238,6 @@ const Banner = ({ isDarkMode }) => {
                                 alt={currentMovie.title}
                                 className="w-full h-full object-cover"
                             />
-                            
-                            {/* Movie Index Indicator */}
-                            <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-md text-xs">
-                                {currentMovieIndex + 1} / {movies.length}
-                            </div>
                         </motion.div>
 
                         {/* Navigation Buttons */}
@@ -311,23 +250,6 @@ const Banner = ({ isDarkMode }) => {
                             >
                                 <SkipBack className="w-5 h-5" />
                             </motion.button>
-                            
-                            {/* Movie Progress Dots */}
-                            <div className="flex items-center space-x-2 px-4">
-                                {movies.map((_, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        className={`h-2 rounded-full ${idx === currentMovieIndex ? 'w-6 bg-red-600' : 'w-2 bg-gray-500/50'}`}
-                                        initial={false}
-                                        animate={{ 
-                                            width: idx === currentMovieIndex ? 24 : 8,
-                                            backgroundColor: idx === currentMovieIndex ? '#dc2626' : '#6b7280' 
-                                        }}
-                                        transition={{ duration: 0.3 }}
-                                    />
-                                ))}
-                            </div>
-                            
                             <motion.button
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
@@ -340,32 +262,6 @@ const Banner = ({ isDarkMode }) => {
                     </motion.div>
                 </div>
             </div>
-
-            {/* Next Movie Preview */}
-            {/* {movies.length > 1 && autoSlideEnabled && (
-                <motion.div
-                    className="absolute top-12 right-8 z-20 flex items-center space-x-4"
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800/80' : 'bg-white/80'} flex items-center space-x-3`}>
-                        <div className="w-16 h-24 rounded-md overflow-hidden">
-                            <img 
-                                src={`https://image.tmdb.org/t/p/w200${movies[(currentMovieIndex + 1) % movies.length].poster_path}`} 
-                                alt="Next Movie" 
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                        <div>
-                            <div className={`text-xs font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>العرض التالي</div>
-                            <div className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {movies[(currentMovieIndex + 1) % movies.length].title}
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            )} */}
 
             {/* Trailer Modal */}
             <AnimatePresence>

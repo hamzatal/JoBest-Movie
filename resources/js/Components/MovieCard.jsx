@@ -1,22 +1,15 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
-import {
-    PlayCircle,
-    BookmarkPlus,
-    BookmarkCheck,
-    Star,
-    Info,
-} from "lucide-react";
-import axios from "axios";
+import { PlayCircle, BookmarkPlus, BookmarkCheck, Star, Info } from "lucide-react";
 import MoviePopup from "../components/PopupMovie";
 
 const MovieCard = ({
     movie,
     isDarkMode,
-    isInwatchlist,
-    addTowatchlist,
-    removeFromwatchlist,
+    isInWishlist,
+    addToWishlist,
+    removeFromWishlist,
 }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPopup, setShowPopup] = useState(false);
@@ -29,34 +22,16 @@ const MovieCard = ({
         setShowPopup(false);
     };
 
-    const handleAddTowatchlist = async () => {
-        try {
-            setIsLoading(true);
-            const response = await axios.post(`/favorites/${movie.id}`);
-            addTowatchlist(movie);
-            console.log(response.data);
-        } catch (error) {
-            console.error("Error adding to watchlist:", error);
-        } finally {
-            setIsLoading(false);
-        }
+    const handleAddToWishlist = () => {
+        setIsLoading(true);
+        addToWishlist(movie);
+        setIsLoading(false);
     };
 
-    const handleRemoveFromwatchlist = async (movie) => {
-        try {
-            setIsLoading(true);
-            const userResponse = await axios.get("/user");
-            const userId = userResponse.data.id;
-            const response = await axios.delete(`/favorites/${movie.id}`, {
-                data: { user_id: userId },
-            });
-            removeFromwatchlist(movie.id);
-            console.log(response.data);
-        } catch (error) {
-            console.error("Error removing from watchlist:", error);
-        } finally {
-            setIsLoading(false);
-        }
+    const handleRemoveFromWishlist = () => {
+        setIsLoading(true);
+        removeFromWishlist(movie.id);
+        setIsLoading(false);
     };
 
     return (
@@ -64,10 +39,7 @@ const MovieCard = ({
             <motion.div
                 key={movie.id}
                 layout
-                whileHover={{
-                    scale: 1.02,
-                    transition: { duration: 0.3 },
-                }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                 whileTap={{ scale: 0.98 }}
                 className="relative group overflow-hidden rounded-3xl shadow-2xl border border-gray-200/20 transform transition-all duration-300 hover:shadow-2xl"
             >
@@ -82,14 +54,14 @@ const MovieCard = ({
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                isInwatchlist && !isLoading
-                                    ? handleRemoveFromwatchlist(movie)
-                                    : handleAddTowatchlist();
+                                isInWishlist && !isLoading
+                                    ? handleRemoveFromWishlist()
+                                    : handleAddToWishlist();
                             }}
                             className={`p-2 rounded-full transition-all duration-300 bg-black/60 hover:bg-white/80`}
                             disabled={isLoading}
                         >
-                            {isInwatchlist ? (
+                            {isInWishlist ? (
                                 <div className="rounded-full p-1">
                                     <BookmarkCheck className="w-6 h-6 text-green-500" />
                                 </div>
@@ -102,15 +74,6 @@ const MovieCard = ({
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                         <div className="flex space-x-4 justify-center">
-                            {/* <a
-                                href={movie.trailerUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-5 py-3 rounded-full transition-all duration-300"
-                            >
-                                <PlayCircle className="w-6 h-6" />
-                                <span className="font-medium">Trailer</span>
-                            </a> */}
                             <button
                                 onClick={handleWatchNowClick}
                                 className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition-all duration-300 transform hover:scale-105"
@@ -160,14 +123,14 @@ const MovieCard = ({
                         movie={movie}
                         isDarkMode={isDarkMode}
                         onClose={closePopup}
-                        onAddToWatchlist={(movie) => {
-                            if (isInwatchlist) {
-                                removeFromwatchlist(movie.id);
+                        onAddToWatchlist={(movie, isAdded) => {
+                            if (isAdded) {
+                                addToWishlist(movie);
                             } else {
-                                addTowatchlist(movie);
+                                removeFromWishlist(movie.id);
                             }
                         }}
-                        isInWatchlist={isInwatchlist}
+                        isInWatchlist={isInWishlist}
                     />,
                     document.body
                 )}

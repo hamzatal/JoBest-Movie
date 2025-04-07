@@ -1,4 +1,3 @@
-// pages/Home.jsx
 import React, { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import Banner from "../components/Banner";
@@ -17,8 +16,15 @@ import {
     Heart,
     Wand2,
     Skull,
-    MessageCircle
+    MessageCircle,
+    CheckCircle,
+    AlertTriangle,
+    Bookmark,
+    BookmarkPlus
 } from "lucide-react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { motion } from "framer-motion";
 
 const Home = () => {
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -87,12 +93,102 @@ const Home = () => {
         return () => clearTimeout(tooltipTimer);
     }, []);
 
+    // Custom toast component that matches the NavBar design language
+    const CustomToast = ({ closeToast, toastProps, icon, title, message, color }) => (
+        <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className={`flex items-center py-3 px-4 rounded-lg shadow-lg backdrop-blur-md ${
+                isDarkMode 
+                ? "bg-gray-900/90 text-white border border-gray-800/50" 
+                : "bg-white/90 text-gray-900 border border-gray-200/50"
+            }`}
+        >
+            <div className={`mr-3 p-2 rounded-full ${color}`}>
+                {icon}
+            </div>
+            <div className="flex-1">
+                <p className="font-medium text-sm">{title}</p>
+                <p className={`text-xs ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{message}</p>
+            </div>
+            <button 
+                onClick={closeToast} 
+                className={`ml-2 p-1 rounded-full hover:${isDarkMode ? "bg-gray-800" : "bg-gray-100"}`}
+            >
+                <X size={16} />
+            </button>
+        </motion.div>
+    );
+
     const handleAddToWishlist = (movie) => {
         if (!wishlist.some((m) => m.id === movie.id)) {
             const newWishlist = [...wishlist, movie];
             setWishlist(newWishlist);
             localStorage.setItem('wishlist', JSON.stringify(newWishlist));
+            
+            toast((props) => (
+                <CustomToast
+                    {...props}
+                    icon={<BookmarkPlus className="w-5 h-5 text-white" />}
+                    title={`${movie.title} added to watchlist`}
+                    message="You can find it in your watchlist section"
+                    color="bg-green-500"
+                />
+            ), {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                closeButton: false
+            });
+        } else {
+            toast((props) => (
+                <CustomToast
+                    {...props}
+                    icon={<AlertTriangle className="w-5 h-5 text-white" />}
+                    title={`${movie.title} is already in watchlist`}
+                    message="This movie is already saved in your list"
+                    color="bg-amber-500"
+                />
+            ), {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                closeButton: false
+            });
         }
+    };
+
+    const handleRemoveFromWishlist = (movieId) => {
+        const movie = wishlist.find((m) => m.id === movieId);
+        const newWishlist = wishlist.filter((m) => m.id !== movieId);
+        setWishlist(newWishlist);
+        localStorage.setItem('wishlist', JSON.stringify(newWishlist));
+        
+        toast((props) => (
+            <CustomToast
+                {...props}
+                icon={<Bookmark className="w-5 h-5 text-white" />}
+                title={`${movie?.title} removed from watchlist`}
+                message="The movie has been removed from your list"
+                color="bg-gray-500"
+            />
+        ), {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            closeButton: false
+        });
     };
 
     const handleLogout = () => {
@@ -134,6 +230,7 @@ const Home = () => {
                             icon={category.icon}
                             isDarkMode={isDarkMode}
                             onAddToWishlist={handleAddToWishlist}
+                            onRemoveFromWishlist={handleRemoveFromWishlist}
                         />
                     </div>
                 ))}
@@ -164,6 +261,19 @@ const Home = () => {
                     resetChat={resetChat}
                 />
             </div>
+
+            <ToastContainer 
+                position="top-right"
+                newestOnTop
+                limit={3}
+                className="mt-16"
+                toastStyle={{
+                    background: 'transparent',
+                    boxShadow: 'none',
+                    padding: 0
+                }}
+                closeButton={false}
+            />
         </div>
     );
 };

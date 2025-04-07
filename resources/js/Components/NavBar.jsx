@@ -37,15 +37,16 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
             href: "/home",
             icon: Home,
         },
-        {
-            label: "About Us",
-            href: "/about-us",
-            icon: BookOpen,
-        },
+        
         {
             label: "Watch list",
             href: "/Watchlist",
             icon: Bookmark,
+        },
+        {
+            label: "About Us",
+            href: "/about-us",
+            icon: BookOpen,
         },
         {
             label: "Contact Us",
