@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Play, 
   ChevronRight, 
@@ -6,11 +6,6 @@ import {
   Calendar,
   Star,
   Clock,
-  Users,
-  Info,
-  Heart,
-  Share2,
-  Bookmark,
   SkipForward,
   SkipBack
 } from "lucide-react";
@@ -23,18 +18,24 @@ const Banner = ({ isDarkMode }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-    const [isBookmarked, setIsBookmarked] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
-    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true); // Flag to control auto slide
+    const [autoSlideEnabled, setAutoSlideEnabled] = useState(true);
+    const [selectedCategory, setSelectedCategory] = useState("popular");
 
     const TMDB_API_KEY = "ba4493b817fe50ef7a9d2c61203c7289";
     const TMDB_BASE_URL = "https://api.themoviedb.org/3";
-    const ROTATION_INTERVAL = 8000; // 8 seconds
+    const ROTATION_INTERVAL = 8000;
 
-    const fetchMovies = async () => {
+    const categories = [
+        { id: "popular", label: "Popular", endpoint: "/movie/popular" },
+        { id: "now_playing", label: "This Week", endpoint: "/movie/now_playing" },
+        { id: "top_rated", label: "Top Rated", endpoint: "/movie/top_rated" },
+        { id: "upcoming", label: "Upcoming", endpoint: "/movie/upcoming" },
+    ];
+
+    const fetchMovies = async (categoryEndpoint) => {
         try {
             setLoading(true);
-            const response = await axios.get(`${TMDB_BASE_URL}/movie/popular`, {
+            const response = await axios.get(`${TMDB_BASE_URL}${categoryEndpoint}`, {
                 params: {
                     api_key: TMDB_API_KEY,
                     language: "en-US",
@@ -60,6 +61,7 @@ const Banner = ({ isDarkMode }) => {
 
             const detailedMovies = await Promise.all(moviePromises);
             setMovies(detailedMovies);
+            setCurrentMovieIndex(0);
             setLoading(false);
         } catch (err) {
             setError("Failed to fetch movie data.");
@@ -68,11 +70,12 @@ const Banner = ({ isDarkMode }) => {
     };
 
     useEffect(() => {
-        fetchMovies();
-    }, []);
+        const selectedEndpoint = categories.find(cat => cat.id === selectedCategory).endpoint;
+        fetchMovies(selectedEndpoint);
+    }, [selectedCategory]);
 
     useEffect(() => {
-        if (!autoSlideEnabled || movies.length === 0) return; // Don't rotate if auto slide is disabled
+        if (!autoSlideEnabled || movies.length === 0) return;
 
         const interval = setInterval(() => {
             setCurrentMovieIndex((prev) => (prev + 1) % movies.length);
@@ -110,12 +113,12 @@ const Banner = ({ isDarkMode }) => {
 
     const handleTrailerOpen = () => {
         setIsTrailerOpen(true);
-        setAutoSlideEnabled(false); // Disable auto slide when trailer is open
+        setAutoSlideEnabled(false);
     };
 
     const handleTrailerClose = () => {
         setIsTrailerOpen(false);
-        setAutoSlideEnabled(true); // Re-enable auto slide when trailer is closed
+        setAutoSlideEnabled(true);
     };
 
     if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
@@ -134,14 +137,12 @@ const Banner = ({ isDarkMode }) => {
                     transition={{ duration: 1 }}
                     className="absolute inset-0"
                 >
-                    {/* Background Image */}
                     <div
                         className="absolute inset-0 bg-cover bg-center transition-transform duration-10000 ease-out scale-105"
                         style={{
                             backgroundImage: `url(https://image.tmdb.org/t/p/original${currentMovie.backdrop_path})`,
                         }}
                     />
-                    {/* Gradient Overlay */}
                     <div
                         className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-t from-gray-900 via-gray-900/90 to-gray-900/60' : 'bg-gradient-to-t from-white via-white/90 to-white/60'}`}
                     />
@@ -149,7 +150,7 @@ const Banner = ({ isDarkMode }) => {
             </AnimatePresence>
 
             {/* Content */}
-            <div className="relative z-10 container mx-auto px-6 h-full flex items-center">
+            <div className="relative z-10 container mx-auto px-6 h-full flex items-center pt-16">
                 <div className="grid md:grid-cols-3 gap-8 items-center">
                     {/* Movie Info (Left Column) */}
                     <motion.div
@@ -171,13 +172,10 @@ const Banner = ({ isDarkMode }) => {
                                     icon={Star}
                                     text={`${currentMovie.vote_average.toFixed(1)}/10`}
                                 />
-                               <MovieInfoBadge
-    icon={Calendar}
-    text={currentMovie.release_date}  // مثلاً: "2023-05-15"
-
+                                <MovieInfoBadge
+                                    icon={Calendar}
+                                    text={currentMovie.release_date}
                                 />
-                               
-
                                 <MovieInfoBadge
                                     icon={Clock}
                                     text={formatRuntime(currentMovie.runtime)}
@@ -207,17 +205,53 @@ const Banner = ({ isDarkMode }) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center space-x-4">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={handleTrailerOpen}
-                                className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
-                            >
-                                <Play className="w-5 h-5 group-hover:animate-pulse" />
-                                <span>Watch Trailer</span>
-                                <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
-                            </motion.button>
+                        {/* Action Buttons */}
+                        <div className="space-y-4">
+                            <div className="flex items-center space-x-4">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={handleTrailerOpen}
+                                    className="group flex items-center space-x-2 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                                >
+                                    <Play className="w-5 h-5 group-hover:animate-pulse" />
+                                    <span>Watch Trailer</span>
+                                    <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
+                                </motion.button>
+                            </div>
+
+                            {/* Category Buttons with Hint */}
+                            <div className="space-y-2">
+                                <motion.p
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.2 }}
+                                    className={`text-sm font-medium  ${isDarkMode ? 'text-green-400' : 'text-gray-600'}`}
+                                >
+                                    Choose a Category
+                                </motion.p>
+                                <div className="flex flex-wrap gap-2">
+                                    {categories.map((category) => (
+                                        <motion.button
+                                            key={category.id}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => setSelectedCategory(category.id)}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                                                selectedCategory === category.id
+                                                    ? isDarkMode
+                                                        ? "bg-red-600 text-white"
+                                                        : "bg-red-500 text-white"
+                                                    : isDarkMode
+                                                        ? "bg-gray-800/80 text-gray-300 hover:bg-gray-700"
+                                                        : "bg-gray-200/80 text-gray-700 hover:bg-gray-300"
+                                            }`}
+                                        >
+                                            {category.label}
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
 
@@ -240,7 +274,6 @@ const Banner = ({ isDarkMode }) => {
                             />
                         </motion.div>
 
-                        {/* Navigation Buttons */}
                         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 flex space-x-4">
                             <motion.button
                                 whileHover={{ scale: 1.1 }}
