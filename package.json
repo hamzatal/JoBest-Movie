@@ -12,12 +12,12 @@
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.12",
         "axios": "^1.7.9",
-        "laravel-vite-plugin": "^0.7.2",
+        "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.4.31",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tailwindcss": "^3.4.16",
-        "vite": "^4.0.0"
+        "vite": "^6.2.5"
     },
     "dependencies": {
         "@hookform/resolvers": "^3.9.1",
