@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { useForm } from '@inertiajs/react';
-// import NavBar from '../components/NavBar';
+import NavBar from "../components/NavBar";
 
 const UserProfile = ({ user, errors }) => {
     const [isEditing, setIsEditing] = useState(false);
