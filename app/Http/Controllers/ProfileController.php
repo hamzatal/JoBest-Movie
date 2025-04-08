@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\PasswordUpdateRequest;
+use App\Http\Requests\DeactivateAccountRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,15 +23,31 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        
+        // Update last login timestamp
+        if (!session()->has('login_tracked')) {
+            $user->last_login = Carbon::now();
+            $user->save();
+            session(['login_tracked' => true]);
+        }
+        
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'user' => [
-                'id' => $request->user()->id,
-                'name' => $request->user()->name,
-                'email' => $request->user()->email,
-                'bio' => $request->user()->bio,
-                'avatar' => $request->user()->avatar ? Storage::url($request->user()->avatar) : null,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'bio' => $user->bio,
+                'phone' => $user->phone,
+                'location' => $user->location,
+                'website' => $user->website,
+                'birthday' => $user->birthday,
+                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
+                'created_at' => $user->created_at,
+                'last_login' => $user->last_login,
+                'is_active' => $user->is_active,
             ],
         ]);
     }
@@ -66,31 +86,74 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Update the user's password.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function updatePassword(PasswordUpdateRequest $request): RedirectResponse
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
+        $request->user()->update([
+            'password' => Hash::make($request->password),
         ]);
 
+        return Redirect::route('profile.edit', ['tab' => 'security'])->with('status', 'Password updated successfully.');
+    }
+
+    /**
+     * Deactivate the user's account (soft delete).
+     */
+    public function deactivate(DeactivateAccountRequest $request): RedirectResponse
+    {
         $user = $request->user();
-
-        // Delete the user's avatar if it exists
-        if ($user->avatar && Storage::exists($user->avatar)) {
-            Storage::delete($user->avatar);
+        
+        // Store deactivation reason if provided
+        if ($request->deactivation_reason) {
+            $user->deactivation_reason = $request->deactivation_reason;
         }
-
-        // Logout the user
+        
+        // Mark account as inactive
+        $user->is_active = false;
+        $user->deactivated_at = Carbon::now();
+        $user->save();
+        
+        // Logout
         Auth::logout();
-
-        // Delete the user's account
-        $user->delete();
-
+        
         // Invalidate the session and regenerate the token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        
+        return Redirect::to('/')->with('status', 'Your account has been deactivated.');
+    }
+    
+    /**
+     * Reactivate a deactivated user account.
+     */
+    public function reactivate(Request $request): RedirectResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+        
+        // Find the deactivated user
+        $user = \App\Models\User::where('email', $credentials['email'])
+            ->where('is_active', false)
+            ->first();
+            
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'email' => 'The provided credentials do not match our records or the account is not deactivated.',
+            ]);
+        }
+        
+        // Reactivate the account
+        $user->is_active = true;
+        $user->deactivated_at = null;
+        $user->deactivation_reason = null;
+        $user->save();
+        
+        // Log the user in
+        Auth::login($user);
+        
+        return Redirect::intended('/dashboard')->with('status', 'Your account has been reactivated.');
     }
 }
