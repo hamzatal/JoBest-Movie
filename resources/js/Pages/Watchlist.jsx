@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowLeft, ArrowRight, Film, Trash2, X, BookmarkPlus, AlertTriangle, Bookmark, Search } from "lucide-react";
 import { Link } from "@inertiajs/react";
-import NavBar from '../components/Layouts/NavBar';
+import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import MovieCard from "../components/MovieCard";
 import { ToastContainer, toast } from "react-toastify";
