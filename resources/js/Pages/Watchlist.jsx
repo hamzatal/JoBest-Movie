@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowLeft, ArrowRight, Film, Trash2, X, BookmarkPlus, AlertTriangle, Bookmark, Search } from "lucide-react";
 import { Link } from "@inertiajs/react";
-import NavBar from "../Components/NavBar";
+import Nav from "../Components/Nav";
 import Footer from "../Components/Footer";
 import MovieCard from "../Components/MovieCard";
 import { ToastContainer, toast } from "react-toastify";
@@ -76,7 +76,7 @@ const Wishlist = () => {
     setCurrentPage(1); // Reset to first page when search changes
   }, [searchQuery, wishlist]);
 
-  // Custom toast component that matches the NavBar design language
+  // Custom toast component that matches the Nav design language
   const CustomToast = ({ closeToast, toastProps, icon, title, message, color }) => (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
@@ -275,7 +275,7 @@ const Wishlist = () => {
           : "bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900"
       }`}
     >
-      <NavBar isDarkMode={isDarkMode} wishlist={wishlist} handleLogout={handleLogout} />
+      <Nav isDarkMode={isDarkMode} wishlist={wishlist} handleLogout={handleLogout} />
 
       <main className="pt-28 px-6 max-w-7xl mx-auto pb-20">
       

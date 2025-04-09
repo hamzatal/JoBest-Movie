@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { useForm } from '@inertiajs/react';
-import NavBar from "../Components/NavBar";
+import Nav from "../Components/Nav";
 
 const UserProfile = ({ user, errors }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -427,7 +427,7 @@ const UserProfile = ({ user, errors }) => {
 
     return (
         <div className="bg-gray-900 min-h-screen">
-            <NavBar isDarkMode={true} />
+            <Nav isDarkMode={true} />
             
             <div className="container mx-auto px-4 py-8 pt-48">
                 <div className="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl border border-gray-700 p-8">
