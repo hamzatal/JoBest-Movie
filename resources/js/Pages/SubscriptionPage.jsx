@@ -740,7 +740,7 @@ const SubscriptionPage = () => {
 
             {/* Content */}
             <div className="relative z-10">
-                {/* Nav */}
+                {/* Navbar */}
                 <nav className="flex justify-between items-center p-6">
                     <div className="flex items-center">
                         <Clapperboard className="w-10 h-10 text-red-500 mr-3" />

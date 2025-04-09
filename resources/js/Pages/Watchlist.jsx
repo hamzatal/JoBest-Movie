@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowLeft, ArrowRight, Film, Trash2, X, BookmarkPlus, AlertTriangle, Bookmark, Search } from "lucide-react";
 import { Link } from "@inertiajs/react";
-import Nav from "../Components/Nav";
+import NavBar from "../Components/Nav";
 import Footer from "../Components/Footer";
 import MovieCard from "../Components/MovieCard";
 import { ToastContainer, toast } from "react-toastify";
@@ -76,7 +76,7 @@ const Wishlist = () => {
     setCurrentPage(1); // Reset to first page when search changes
   }, [searchQuery, wishlist]);
 
-  // Custom toast component that matches the Nav design language
+  // Custom toast component that matches the NavBar design language
   const CustomToast = ({ closeToast, toastProps, icon, title, message, color }) => (
     <motion.div
       initial={{ opacity: 0, x: 50 }}
@@ -115,8 +115,17 @@ const Wishlist = () => {
       case "ratingDesc":
         return [...list].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
       case "dateAdded":
+        return [...list].sort((a, b) => {
+          const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
+          const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
+          return dateB - dateA; // Newest first
+        });
       default:
-        return list;
+        return [...list].sort((a, b) => {
+          const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
+          const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
+          return dateB - dateA; // Newest first
+        });
     }
   };
 
@@ -275,7 +284,7 @@ const Wishlist = () => {
           : "bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900"
       }`}
     >
-      <Nav isDarkMode={isDarkMode} wishlist={wishlist} handleLogout={handleLogout} />
+      <NavBar isDarkMode={isDarkMode} wishlist={wishlist} handleLogout={handleLogout} />
 
       <main className="pt-28 px-6 max-w-7xl mx-auto pb-20">
       
@@ -341,7 +350,7 @@ const Wishlist = () => {
                       isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"
                     } py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500`}
                   >
-                    <option value="dateAdded">Date Added</option>
+                    <option value="dateAdded">Date Added (Newest First)</option>
                     <option value="titleAsc">Title (A-Z)</option>
                     <option value="titleDesc">Title (Z-A)</option>
                     <option value="ratingDesc">Highest Rated</option>

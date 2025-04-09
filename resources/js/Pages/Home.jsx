@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Nav from "../Components/Nav.jsx";
+import NavBar from "../components/NavBar.jsx";
 import Banner from "../Components/Banner";
 import Footer from "../Components/Footer";
 import ChatBot from "../Components/ChatBot";
@@ -93,7 +93,7 @@ const Home = () => {
         return () => clearTimeout(tooltipTimer);
     }, []);
 
-    // Custom toast component that matches the Nav design language
+    // Custom toast component that matches the NavBar design language
     const CustomToast = ({ closeToast, toastProps, icon, title, message, color }) => (
         <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -213,7 +213,7 @@ const Home = () => {
                     : "bg-gradient-to-br from-gray-50 to-white text-gray-900"
             }`}
         >
-            <Nav
+            <NavBar
                 isDarkMode={isDarkMode}
                 wishlist={wishlist}
                 handleLogout={handleLogout}
