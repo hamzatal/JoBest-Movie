@@ -30,9 +30,6 @@ const UserProfile = ({ user, errors }) => {
         avatar: null,
         bio: user?.bio || 'No bio available',
         phone: user?.phone || '',
-        location: user?.location || '',
-        website: user?.website || '',
-        birthday: user?.birthday || '',
         _method: 'PATCH',
     });
 
@@ -212,46 +209,8 @@ const UserProfile = ({ user, errors }) => {
                                     />
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-3">
-                                <Calendar className="w-6 h-6 text-red-600" />
-                                <div className="flex-grow">
-                                    <label className="block text-sm font-medium mb-2 text-white">Birthday</label>
-                                    <input 
-                                        type="date"
-                                        name="birthday"
-                                        value={data.birthday}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <MapPin className="w-6 h-6 text-red-600" />
-                                <div className="flex-grow">
-                                    <label className="block text-sm font-medium mb-2 text-white">Location</label>
-                                    <input 
-                                        type="text"
-                                        name="location"
-                                        value={data.location}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <Link className="w-6 h-6 text-red-600" />
-                                <div className="flex-grow">
-                                    <label className="block text-sm font-medium mb-2 text-white">Website</label>
-                                    <input 
-                                        type="url"
-                                        name="website"
-                                        value={data.website}
-                                        onChange={handleInputChange}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
-                                        placeholder="https://"
-                                    />
-                                </div>
-                            </div>
+                            
+                           
                             <div className="flex items-start space-x-3">
                                 <FileText className="w-6 h-6 text-red-600 mt-2" />
                                 <div className="flex-grow">
@@ -296,36 +255,9 @@ const UserProfile = ({ user, errors }) => {
                                     </div>
                                 </div>
                             )}
-                            {data.birthday && (
-                                <div>
-                                    <div className="flex items-center space-x-3">
-                                        <Calendar className="w-6 h-6 text-red-600" />
-                                        <div>
-                                            <p className="text-md text-white">{new Date(data.birthday).toLocaleDateString()}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            {data.location && (
-                                <div>
-                                    <div className="flex items-center space-x-3">
-                                        <MapPin className="w-6 h-6 text-red-600" />
-                                        <div>
-                                            <p className="text-md text-white">{data.location}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            {data.website && (
-                                <div>
-                                    <div className="flex items-center space-x-3">
-                                        <Link className="w-6 h-6 text-red-600" />
-                                        <div>
-                                            <a href={data.website} target="_blank" rel="noopener noreferrer" className="text-md text-blue-400 hover:text-blue-300 underline">{data.website}</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                           
+                          
+                          
                             <div>
                                 <div className="flex items-start space-x-3">
                                     <FileText className="w-6 h-6 text-red-600 mt-1" />

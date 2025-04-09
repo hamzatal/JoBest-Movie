@@ -10,7 +10,7 @@
         <title>{{ $title ?? 'JO BEST' }}</title>
 
         <!-- icon -->
-        <link rel="icon" type="image/x-icon" href="{{ asset('/clapperboard.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('/clipboard.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
