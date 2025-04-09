@@ -15,7 +15,7 @@ import {
 import { Link, usePage } from "@inertiajs/react";
 import LiveSearch from "./LiveSearch";
 
-const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
+const Nav = ({ isDarkMode, wishlist, handleLogout, user }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { url } = usePage();
@@ -314,4 +314,4 @@ const NavBar = ({ isDarkMode, wishlist, handleLogout, user }) => {
     );
 };
 
-export default NavBar;
+export default Nav;
