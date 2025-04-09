@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { createPortal } from "react-dom";
 import { PlayCircle, BookmarkPlus, BookmarkCheck, Star, Info } from "lucide-react";
-import MoviePopup from "../components/PopupMovie";
+import MoviePopup from "../Components/PopupMovie";
 
 const MovieCard = ({
     movie,

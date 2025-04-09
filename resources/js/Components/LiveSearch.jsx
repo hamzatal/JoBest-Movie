@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X } from "lucide-react"; // Import X icon for the clear button
-import MoviePopup from "../components/PopupMovie";
+import MoviePopup from "../Components/PopupMovie";
 import { createPortal } from "react-dom";
 
 const LiveSearch = ({ onSearchResults, isDarkMode }) => {
