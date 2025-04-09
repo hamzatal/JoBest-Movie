@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Mail, Phone, MapPin, User, Save, X, Plus, Trash, Filter } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+// import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const UsersView = () => {
   const [users, setUsers] = useState([]);

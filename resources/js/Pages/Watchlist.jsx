@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ArrowLeft, ArrowRight, Film, Trash2, X, BookmarkPlus, AlertTriangle, Bookmark, Search } from "lucide-react";
 import { Link } from "@inertiajs/react";
-import NavBar from "../Components/Nav";
-import Footer from "../Components/Footer";
-import MovieCard from "../Components/MovieCard";
+import NavBar from "../components/Nav";
+import Footer from "../components/Footer";
+import MovieCard from "../components/MovieCard";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -115,17 +115,8 @@ const Wishlist = () => {
       case "ratingDesc":
         return [...list].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
       case "dateAdded":
-        return [...list].sort((a, b) => {
-          const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
-          const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-          return dateA - dateB; // Oldest first
-        });
       default:
-        return [...list].sort((a, b) => {
-          const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
-          const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-          return dateA - dateB; // Oldest first
-        });
+        return list;
     }
   };
 
@@ -350,7 +341,7 @@ const Wishlist = () => {
                       isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"
                     } py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500`}
                   >
-                    <option value="dateAdded">Date Added (Oldest First)</option>
+                    <option value="dateAdded">Date Added</option>
                     <option value="titleAsc">Title (A-Z)</option>
                     <option value="titleDesc">Title (Z-A)</option>
                     <option value="ratingDesc">Highest Rated</option>
