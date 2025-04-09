@@ -118,13 +118,13 @@ const Wishlist = () => {
         return [...list].sort((a, b) => {
           const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
           const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-          return dateB - dateA; // Newest first
+          return dateA - dateB; // Oldest first
         });
       default:
         return [...list].sort((a, b) => {
           const dateA = a.dateAdded ? new Date(a.dateAdded) : new Date(0);
           const dateB = b.dateAdded ? new Date(b.dateAdded) : new Date(0);
-          return dateB - dateA; // Newest first
+          return dateA - dateB; // Oldest first
         });
     }
   };
@@ -350,7 +350,7 @@ const Wishlist = () => {
                       isDarkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-700"
                     } py-1 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500`}
                   >
-                    <option value="dateAdded">Date Added (Newest First)</option>
+                    <option value="dateAdded">Date Added (Oldest First)</option>
                     <option value="titleAsc">Title (A-Z)</option>
                     <option value="titleDesc">Title (Z-A)</option>
                     <option value="ratingDesc">Highest Rated</option>
