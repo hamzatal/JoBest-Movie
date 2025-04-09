@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, X, Edit, Trash } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '../Components/ui/Card';
 
 const CategoryView = () => {
   const [categories, setCategories] = useState([]);
