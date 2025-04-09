@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import NavBar from "../Components/NavBar";
+import NavBar from "../components/NavBar.jsx";
 import Banner from "../Components/Banner";
 import Footer from "../Components/Footer";
 import ChatBot from "../Components/ChatBot";
