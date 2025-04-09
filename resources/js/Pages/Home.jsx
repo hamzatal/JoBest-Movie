@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import NavBar from "../components/NavBar";
-import Banner from "../components/Banner";
-import Footer from "../components/Footer";
-import ChatBot from "../components/ChatBot";
+import NavBar from "../Components/NavBar";
+import Banner from "../Components/Banner";
+import Footer from "../Components/Footer";
+import ChatBot from "../Components/ChatBot";
 import ModernMoviesGrid from "../Components/MoviesGrid";
 import { movieEndpoints } from "../Components/tmdb";
 import {
