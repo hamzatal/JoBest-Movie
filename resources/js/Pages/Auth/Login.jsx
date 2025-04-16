@@ -129,7 +129,7 @@ const LoginPage = () => {
                                 isDarkMode ? "text-white" : "text-gray-900"
                             }`}
                         >
-                            Movie <span className="text-red-500">Mania</span>
+                            JO <span className="text-red-500">BEST</span>
                         </h1>
                     </div>
 

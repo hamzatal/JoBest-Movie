@@ -12,43 +12,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request)
     {
-        $user = $request->user();
-        
-        // Update last login timestamp
-        if (!session()->has('login_tracked')) {
-            $user->last_login = Carbon::now();
-            $user->save();
-            session(['login_tracked' => true]);
-        }
-        
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+        return inertia('Profile/UserProfile', [
+            'user' => $request->user(),
+            'errors' => $request->session()->get('errors') ? $request->session()->get('errors')->getBag('default')->getMessages() : [],
             'status' => session('status'),
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'bio' => $user->bio,
-                'phone' => $user->phone,
-                'location' => $user->location,
-                'website' => $user->website,
-                'birthday' => $user->birthday,
-                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
-                'created_at' => $user->created_at,
-                'last_login' => $user->last_login,
-                'is_active' => $user->is_active,
-            ],
         ]);
     }
 
@@ -59,30 +36,63 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // Log incoming request data for debugging
+        Log::info('Profile update request:', [
+            'files' => $request->hasFile('avatar') ? $request->file('avatar')->getClientOriginalName() : 'No file',
+            'data' => $request->except('avatar'),
+        ]);
+
         // Update the user's profile data
-        $user->fill($request->validated());
+        $validated = $request->validated();
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'bio' => $validated['bio'],
+            'phone' => $validated['phone'],
+        ]);
 
         // Handle email verification if the email is changed
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
+            if ($user instanceof MustVerifyEmail) {
+                $user->sendEmailVerificationNotification();
+            }
         }
 
         // Handle avatar upload
-        if ($request->hasFile('avatar')) {
+        if ($request->hasFile('avatar') && $request->file('avatar')->isValid()) {
+            Log::info('Avatar file detected:', [
+                'name' => $request->file('avatar')->getClientOriginalName(),
+                'size' => $request->file('avatar')->getSize(),
+                'mime' => $request->file('avatar')->getMimeType(),
+            ]);
+
             // Delete the old avatar if it exists
-            if ($user->avatar && Storage::exists($user->avatar)) {
-                Storage::delete($user->avatar);
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+                Log::info('Deleted old avatar:', ['path' => $user->avatar]);
             }
 
             // Store the new avatar
             $avatarPath = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $avatarPath;
+            Log::info('New avatar stored:', ['path' => $avatarPath]);
+        } else {
+            Log::info('No valid avatar file uploaded.');
         }
 
         // Save the updated user data
         $user->save();
+        Log::info('User updated:', [
+            'id' => $user->id,
+            'avatar' => $user->avatar,
+            'name' => $user->name,
+            'email' => $user->email,
+            'bio' => $user->bio,
+            'phone' => $user->phone,
+        ]);
 
-        return Redirect::route('profile.edit')->with('status', 'Profile updated successfully.');
+        return Redirect::route('UserProfile')->with('status', 'Profile updated successfully.');
     }
 
     /**
@@ -91,69 +101,35 @@ class ProfileController extends Controller
     public function updatePassword(PasswordUpdateRequest $request): RedirectResponse
     {
         $request->user()->update([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->validated()['password']),
         ]);
 
-        return Redirect::route('profile.edit', ['tab' => 'security'])->with('status', 'Password updated successfully.');
+        return Redirect::route('UserProfile')->with('status', 'Password updated successfully.');
     }
 
     /**
-     * Deactivate the user's account (soft delete).
+     * Deactivate the user's account.
      */
     public function deactivate(DeactivateAccountRequest $request): RedirectResponse
     {
+        Log::info('Deactivate account request:', $request->all());
+
         $user = $request->user();
         
-        // Store deactivation reason if provided
-        if ($request->deactivation_reason) {
-            $user->deactivation_reason = $request->deactivation_reason;
+        if ($request->validated()['deactivation_reason']) {
+            $user->deactivation_reason = $request->validated()['deactivation_reason'];
         }
         
-        // Mark account as inactive
         $user->is_active = false;
         $user->deactivated_at = Carbon::now();
         $user->save();
         
-        // Logout
+        Log::info('Account deactivated:', ['user_id' => $user->id]);
+
         Auth::logout();
-        
-        // Invalidate the session and regenerate the token
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         
-        return Redirect::to('/')->with('status', 'Your account has been deactivated.');
-    }
-    
-    /**
-     * Reactivate a deactivated user account.
-     */
-    public function reactivate(Request $request): RedirectResponse
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
-        
-        // Find the deactivated user
-        $user = \App\Models\User::where('email', $credentials['email'])
-            ->where('is_active', false)
-            ->first();
-            
-        if (!$user || !Hash::check($credentials['password'], $user->password)) {
-            return back()->withErrors([
-                'email' => 'The provided credentials do not match our records or the account is not deactivated.',
-            ]);
-        }
-        
-        // Reactivate the account
-        $user->is_active = true;
-        $user->deactivated_at = null;
-        $user->deactivation_reason = null;
-        $user->save();
-        
-        // Log the user in
-        Auth::login($user);
-        
-        return Redirect::intended('/dashboard')->with('status', 'Your account has been reactivated.');
+        return Redirect::to('/about-us')->with('status', 'Your account has been deactivated.');
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Mail, 
@@ -7,28 +7,34 @@ import {
   Camera, 
   UserCircle2,
   FileText,
-  Calendar,
-  MapPin,
   Phone,
-  Link,
   Lock,
   AlertTriangle,
-  X
+  X,
+  Eye,
+  EyeOff,
+  CheckCircle
 } from 'lucide-react';
-import { useForm } from '@inertiajs/react';
+import { useForm, usePage, router } from '@inertiajs/react';
 import NavBar from "../Components/Nav";
+import toast, { Toaster } from 'react-hot-toast';
 
 const UserProfile = ({ user, errors }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
     const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+    const [showDeactivationSuccessModal, setShowDeactivationSuccessModal] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showDeactivatePassword, setShowDeactivatePassword] = useState(false);
 
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, setError } = useForm({
         name: user?.name || '',
         email: user?.email || '',
         avatar: null,
-        bio: user?.bio || 'No bio available',
+        bio: user?.bio || '',
         phone: user?.phone || '',
         _method: 'PATCH',
     });
@@ -43,8 +49,16 @@ const UserProfile = ({ user, errors }) => {
     const { data: deactivateData, setData: setDeactivateData, post: postDeactivate, processing: processingDeactivate } = useForm({
         password: '',
         deactivation_reason: '',
-        _method: 'PUT',
+        _method: 'DELETE',
     });
+
+    const { props } = usePage();
+
+    useEffect(() => {
+        if (props.status) {
+            toast.success(props.status, { duration: 4000 });
+        }
+    }, [props.status]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -64,6 +78,21 @@ const UserProfile = ({ user, errors }) => {
     const handleAvatarUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                setError('avatar', 'The avatar must be a file of type: jpeg, png, jpg, gif.');
+                toast.error('Invalid file type. Please upload an image (jpeg, png, jpg, gif).', { duration: 4000 });
+                return;
+            }
+
+            // Validate file size (2MB = 2 * 1024 * 1024 bytes)
+            if (file.size > 2 * 1024 * 1024) {
+                setError('avatar', 'The avatar may not be larger than 2MB.');
+                toast.error('File too large. Please upload an image smaller than 2MB.', { duration: 4000 });
+                return;
+            }
+
             setData('avatar', file);
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -77,9 +106,15 @@ const UserProfile = ({ user, errors }) => {
         e.preventDefault();
         post(route('profile.update'), {
             preserveScroll: true,
+            forceFormData: true, // Ensure file uploads are handled as multipart/form-data
             onSuccess: () => {
                 setIsEditing(false);
                 setPreviewImage(null);
+                setData('avatar', null); // Reset avatar after successful save
+                toast.success('Profile updated successfully.', { duration: 4000 });
+            },
+            onError: () => {
+                toast.error('Failed to update profile. Please check the errors.', { duration: 4000 });
             },
         });
     };
@@ -90,21 +125,41 @@ const UserProfile = ({ user, errors }) => {
             preserveScroll: true,
             onSuccess: () => {
                 resetPw();
+                toast.success('Password updated successfully.', { duration: 4000 });
+            },
+            onError: () => {
+                toast.error('Failed to update password. Please check the errors.', { duration: 4000 });
             },
         });
     };
 
     const handleDeactivateAccount = (e) => {
         e.preventDefault();
+        
+        // First hide the deactivate modal
+        setShowDeactivateModal(false);
+        
+        // Show the success modal immediately
+        setShowDeactivationSuccessModal(true);
+        
+        // Then handle the actual deactivation
         postDeactivate(route('profile.deactivate'), {
             preserveScroll: true,
-            onSuccess: () => {
-                // Redirect happens server-side
+            onError: () => {
+                // If there's an error, hide the success modal and show error message
+                setShowDeactivationSuccessModal(false);
+                toast.error('Failed to deactivate account. Please check the errors.', { duration: 4000 });
             },
         });
     };
+    
 
-    const displayAvatar = previewImage || user?.avatar || '/images/avatar.jpg';
+    const handleDeactivationSuccessClose = () => {
+        setShowDeactivationSuccessModal(false);
+        router.visit('/about-us');
+    };
+
+    const displayAvatar = previewImage || (user?.avatar ? `/storage/${user.avatar}` : '/images/avatar.jpg');
     
     const renderTabContent = () => {
         switch(activeTab) {
@@ -135,7 +190,7 @@ const UserProfile = ({ user, errors }) => {
                                 <Camera className="text-white h-10 w-10" />
                                 <input 
                                     type="file" 
-                                    accept="image/*" 
+                                    accept="image/jpeg,image/png,image/jpg,image/gif" 
                                     className="hidden"
                                     onChange={handleAvatarUpload}
                                 />
@@ -207,10 +262,11 @@ const UserProfile = ({ user, errors }) => {
                                         onChange={handleInputChange}
                                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
                                     />
+                                    {errors?.phone && (
+                                        <p className="mt-2 text-red-500 text-sm">{errors.phone}</p>
+                                    )}
                                 </div>
                             </div>
-                            
-                           
                             <div className="flex items-start space-x-3">
                                 <FileText className="w-6 h-6 text-red-600 mt-2" />
                                 <div className="flex-grow">
@@ -255,14 +311,11 @@ const UserProfile = ({ user, errors }) => {
                                     </div>
                                 </div>
                             )}
-                           
-                          
-                          
                             <div>
                                 <div className="flex items-start space-x-3">
                                     <FileText className="w-6 h-6 text-red-600 mt-1" />
                                     <div>
-                                        <p className="text-md text-white">{data.bio}</p>
+                                        <p className="text-md text-white">{data.bio || 'No bio available'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -281,43 +334,64 @@ const UserProfile = ({ user, errors }) => {
             </h2>
             
             <form onSubmit={handleUpdatePassword} className="space-y-5">
-                <div>
+                <div className="relative">
                     <label className="block text-sm font-medium mb-2 text-white">Current Password</label>
                     <input 
-                        type="password"
+                        type={showCurrentPassword ? 'text' : 'password'}
                         name="current_password"
                         value={pwData.current_password}
                         onChange={handlePasswordChange}
                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-10 text-gray-400 hover:text-white"
+                    >
+                        {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                     {errors?.current_password && (
                         <p className="mt-2 text-red-500 text-sm">{errors.current_password}</p>
                     )}
                 </div>
 
-                <div>
+                <div className="relative">
                     <label className="block text-sm font-medium mb-2 text-white">New Password</label>
                     <input 
-                        type="password"
+                        type={showNewPassword ? 'text' : 'password'}
                         name="password"
                         value={pwData.password}
                         onChange={handlePasswordChange}
                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-10 text-gray-400 hover:text-white"
+                    >
+                        {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                     {errors?.password && (
                         <p className="mt-2 text-red-500 text-sm">{errors.password}</p>
                     )}
                 </div>
 
-                <div>
+                <div className="relative">
                     <label className="block text-sm font-medium mb-2 text-white">Confirm New Password</label>
                     <input 
-                        type="password"
+                        type={showConfirmPassword ? 'text' : 'password'}
                         name="password_confirmation"
                         value={pwData.password_confirmation}
                         onChange={handlePasswordChange}
                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600 transition-all"
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-10 text-gray-400 hover:text-white"
+                    >
+                        {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
                 </div>
 
                 <div className="pt-4">
@@ -359,9 +433,10 @@ const UserProfile = ({ user, errors }) => {
 
     return (
         <div className="bg-gray-900 min-h-screen">
+            <Toaster position="top-right" />
             <NavBar isDarkMode={true} />
             
-            <div className="container mx-auto px-4 py-8 pt-48">
+            <div className="container mx-auto px-4 py-8 pt-24">
                 <div className="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl border border-gray-700 p-8">
                     <div className="flex items-center justify-between mb-10">
                         <div className="flex items-center space-x-4">
@@ -382,6 +457,7 @@ const UserProfile = ({ user, errors }) => {
                                         onClick={() => {
                                             setIsEditing(false);
                                             setPreviewImage(null);
+                                            setData('avatar', null);
                                         }}
                                         className="flex items-center text-gray-300 hover:bg-gray-700 px-4 py-2 rounded-lg transition-all"
                                     >
@@ -438,18 +514,25 @@ const UserProfile = ({ user, errors }) => {
                         </div>
                         
                         <form onSubmit={handleDeactivateAccount}>
-                            <div className="mb-4">
+                            <div className="mb-4 relative">
                                 <label className="block text-sm font-medium mb-2 text-white">Password</label>
                                 <input 
-                                    type="password"
+                                    type={showDeactivatePassword ? 'text' : 'password'}
                                     name="password"
                                     value={deactivateData.password}
                                     onChange={handleDeactivateChange}
                                     required
                                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-red-600"
                                 />
-                                {errors?.deactivate_password && (
-                                    <p className="mt-2 text-red-500 text-sm">{errors.deactivate_password}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeactivatePassword(!showDeactivatePassword)}
+                                    className="absolute right-3 top-10 text-gray-400 hover:text-white"
+                                >
+                                    {showDeactivatePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                                {errors?.password && (
+                                    <p className="mt-2 text-red-500 text-sm">{errors.password}</p>
                                 )}
                             </div>
                             
@@ -481,6 +564,43 @@ const UserProfile = ({ user, errors }) => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Deactivation Success Modal */}
+            {showDeactivationSuccessModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-800 rounded-xl max-w-md w-full p-6 border border-red-700 shadow-xl">
+                        <div className="text-center">
+                            <div className="flex justify-center mb-4">
+                                <CheckCircle className="w-16 h-16 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-4">Account Deactivated</h3>
+                            <p className="text-gray-300 mb-6">
+                                Your account has been successfully deactivated. If you need any assistance, please contact our support team:
+                            </p>
+                            <div className="bg-gray-900 rounded-lg p-4 mb-6 border border-gray-700">
+                                <div className="flex items-center space-x-3 mb-3">
+                                    <Phone className="w-5 h-5 text-red-500" />
+                                    <p className="text-gray-300">
+                                        <span className="font-medium text-white">Phone:</span> +1234567890
+                                    </p>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <Mail className="w-5 h-5 text-red-500" />
+                                    <p className="text-gray-300">
+                                        <span className="font-medium text-white">Email:</span> support@example.com
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleDeactivationSuccessClose}
+                                className="bg-red-700 hover:bg-red-800 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md flex items-center justify-center w-full"
+                            >
+                                OK
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
