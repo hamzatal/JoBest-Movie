@@ -1,56 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, Film, Calendar, Settings, 
-  LogOut, Menu, X, Bell, Search,
-  BarChart2, Activity, TrendingUp,
-  Clapperboard, Plus, Edit, Trash,
-  Filter, SquareStack, MessageSquare,  Send, User, Mail, Lock, Phone, MapPin, Save ,Eye
+  Users, LogOut, Menu, X, Bell, Search,
+  BarChart2, Clapperboard, MessageSquare, User,
+  Shield, Calendar, ChevronLeft, ChevronRight,
+  Activity, Settings, UploadCloud, Save, Eye, EyeOff
 } from 'lucide-react';
 import Swal from 'sweetalert2';
-import ProfileView from './ProfileView';
+import { Transition } from '@headlessui/react';
 
 const AdminDashboard = () => {
+  // State Initialization
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeView, setActiveView] = useState('dashboard');
-  const [movies, setMovies] = useState([]);
   const [users, setUsers] = useState([]);
-  const [watchedMovies, setWatchedMovies] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [revenue, setRevenue] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
-  const [showMovieModal, setShowMovieModal] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showReplyModal, setShowReplyModal] = useState(false);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedContact, setSelectedContact] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [replyMessage, setReplyMessage] = useState('');
-  const [movieFormData, setMovieFormData] = useState({
-    title: '',
-    category_id: '',
-    genre: '',
-    description: '',
-    release_date: '',
-    rating: '',
-    poster_url: '',
-    trailer_url: '',
-    director: '',
-    cast: ''
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
+  const [adminProfile, setAdminProfile] = useState({
+    name: '',
+    email: '',
+    avatar: null
   });
-  const [categoryFormData, setCategoryFormData] = useState({
-    name: ''
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    profileImage: null
   });
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Animation Variants
+  const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.5 } }
+  };
+
+  const slideUp = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.4 } }
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  // Utility Functions
+  const getCsrfToken = () => {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  };
 
   const showSuccessAlert = (message) => {
     Swal.fire({
       title: 'Success!',
       text: message,
       icon: 'success',
-      confirmButtonColor: '#EF4444',
+      confirmButtonColor: '#6366F1',
+      background: isDarkMode ? '#1F2937' : '#fff',
+      color: isDarkMode ? '#fff' : '#000',
     });
   };
 
@@ -59,869 +80,1111 @@ const AdminDashboard = () => {
       title: 'Error!',
       text: message,
       icon: 'error',
-      confirmButtonColor: '#EF4444',
+      confirmButtonColor: '#6366F1',
+      background: isDarkMode ? '#1F2937' : '#fff',
+      color: isDarkMode ? '#fff' : '#000',
     });
   };
 
-  const showConfirmDialog = async (message) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: message,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#9CA3AF',
-      confirmButtonText: 'Yes, delete it!'
-    });
-    return result.isConfirmed;
-  };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-  const getCsrfToken = () => {
-    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  };
-
+  // Data Fetching
   const fetchDashboardData = async () => {
+    setIsLoading(true);
     try {
       const headers = {
         'X-CSRF-TOKEN': getCsrfToken(),
         'Accept': 'application/json',
       };
 
-      const moviesResponse = await fetch('/api/movies', { headers });
-      const moviesData = await moviesResponse.json();
-      setMovies(moviesData);
-
+      // Fetch users
       const usersResponse = await fetch('/api/users', { headers });
-      const usersData = await usersResponse.json();
-      setUsers(usersData.data);
-      setTotalUsers(usersData.data.length);
-      setActiveUsers(usersData.data.filter(user => user.is_active).length);
+      if (!usersResponse.ok) {
+        const errorText = await usersResponse.text();
+        console.error('Users API response:', errorText);
+        throw new Error(`Failed to fetch users: ${usersResponse.status}`);
+      }
+      let usersData = await usersResponse.json();
+      // Normalize data to array
+      usersData = Array.isArray(usersData) ? usersData : 
+                  Array.isArray(usersData.data) ? usersData.data : [];
+      setUsers(usersData);
+      setTotalUsers(usersData.length);
+      setActiveUsers(usersData.filter(user => user.status === 'active').length);
 
-      const categoriesResponse = await fetch('/api/categories', { headers });
-      const categoriesData = await categoriesResponse.json();
-      setCategories(categoriesData);
-
+      // Fetch contacts
       const contactsResponse = await fetch('/api/contacts', { headers });
-      const contactsData = await contactsResponse.json();
+      if (!contactsResponse.ok) {
+        const errorText = await contactsResponse.text();
+        console.error('Contacts API response:', errorText);
+        throw new Error(`Failed to fetch contacts: ${contactsResponse.status}`);
+      }
+      let contactsData = await contactsResponse.json();
+      // Normalize data to array
+      contactsData = Array.isArray(contactsData) ? contactsData : 
+                     Array.isArray(contactsData.data) ? contactsData.data : [];
       setContacts(contactsData);
 
-      const watchedMoviesResponse = await fetch('/api/watched-movies', { headers });
-    const watchedMoviesData = await watchedMoviesResponse.json();
-    setWatchedMovies(watchedMoviesData);
-
-      const revenueResponse = await fetch('/api/subscriptions/revenue', { headers });  
-      const revenueData = await revenueResponse.json();
-      setRevenue(revenueData.total_revenue);
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-    alert('Error fetching data. Please try again.');
-  }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      showErrorAlert(`Failed to load dashboard data: ${error.message}`);
+      setUsers([]);
+      setContacts([]);
+      setTotalUsers(0);
+      setActiveUsers(0);
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const handleLogout = async () => {
-    await fetch('/admin/logout', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+
+  const fetchAdminProfile = async () => {
+    try {
+        const headers = {
+            'X-CSRF-TOKEN': getCsrfToken(),
+            'Accept': 'application/json',
+        };
+        const response = await fetch('/admin/profile', { headers });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Profile API response:', errorText);
+            throw new Error(`Failed to fetch profile: ${response.status}`);
         }
-    });
+        const profileData = await response.json();
+        setAdminProfile({
+            name: profileData.name || '',
+            email: profileData.email || '',
+            avatar: profileData.avatar || null
+        });
+        setProfileForm({
+            name: profileData.name || '',
+            email: profileData.email || '',
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+            profileImage: null
+        });
+        setImagePreview(profileData.avatar || null);
+    } catch (error) {
+        console.error('Error fetching admin profile:', error);
+        showErrorAlert(`Failed to load profile: ${error.message}`);
+    }
 };
 
-  // Update handleMovieSubmit with proper headers and error handling
-  const handleMovieSubmit = async (e) => {
-    e.preventDefault();
+  // Handlers
+  const handleLogout = async () => {
     try {
-      const url = selectedMovie ? `/api/movies/${selectedMovie.id}` : '/api/movies';
-      const method = selectedMovie ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
+      const response = await fetch('/admin/logout', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRF-TOKEN': getCsrfToken(),
+          'Content-Type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        window.location.href = '/login';
+      } else {
+        throw new Error('Logout failed');
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      showErrorAlert('Logout failed. Please try again.');
+    }
+  };
+
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const response = await fetch(`/users/${userId}/is`, {
+        method: 'PUT',
+        headers: {
+          'X-CSRF-TOKEN': getCsrfToken(),
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify(movieFormData),
+        body: JSON.stringify({ status: newStatus }),
       });
-      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error saving movie');
+        throw new Error(errorData.message || 'Error updating user status');
       }
-
-      setShowMovieModal(false);
-      fetchDashboardData();
-      resetMovieForm();
-      showSuccessAlert(selectedMovie ? 'Movie updated successfully!' : 'Movie created successfully!');
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, status: newStatus } : user
+        )
+      );
+      setActiveUsers(newStatus === 'active' ? activeUsers + 1 : activeUsers - 1);
+      showSuccessAlert(`User status changed to ${newStatus}`);
     } catch (error) {
-      showErrorAlert(error.message || 'Error saving movie. Please try again.');
+      console.error('Error updating user status:', error);
+      showErrorAlert(error.message || 'Error updating user status');
     }
   };
 
-  // Update handleCategorySubmit with proper headers and error handling
-  const handleCategorySubmit = async (e) => {
+  const handleProfileInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileForm(prev => ({ ...prev, profileImage: file }));
+      const reader = new FileReader();
+      reader.onload = (event) => setImagePreview(event.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
+    if (profileForm.newPassword !== profileForm.confirmPassword) {
+      showErrorAlert("New passwords don't match");
+      return;
+    }
     try {
-      const url = selectedCategory ? `/api/categories/${selectedCategory.id}` : '/api/categories';
-      const method = selectedCategory ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
+      const formData = new FormData();
+      formData.append('name', profileForm.name);
+      formData.append('email', profileForm.email);
+      if (profileForm.currentPassword && profileForm.newPassword) {
+        formData.append('current_password', profileForm.currentPassword);
+        formData.append('new_password', profileForm.newPassword);
+      }
+      if (profileForm.profileImage) {
+        formData.append('avatar', profileForm.profileImage);
+      }
+      formData.append('_method', 'PUT');
+
+      const response = await fetch('/admin/profile', {
+        method: 'POST', // Use POST with _method for Laravel
         headers: {
-          'Content-Type': 'application/json',
           'X-CSRF-TOKEN': getCsrfToken(),
-          'Accept': 'application/json',
         },
-        body: JSON.stringify(categoryFormData),
+        body: formData,
       });
-      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Error saving category');
+        throw new Error(errorData.message || 'Failed to update profile');
       }
-
-      setShowCategoryModal(false);
-      fetchDashboardData();
-      resetCategoryForm();
-      showSuccessAlert(selectedCategory ? 'Category updated successfully!' : 'Category created successfully!');
+      const updatedProfile = await response.json();
+      setAdminProfile({
+        name: updatedProfile.name || '',
+        email: updatedProfile.email || '',
+        avatar: updatedProfile.avatar || null
+      });
+      setProfileForm({
+        name: updatedProfile.name || '',
+        email: updatedProfile.email || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+        profileImage: null
+      });
+      setImagePreview(updatedProfile.avatar || null);
+      showSuccessAlert('Profile updated successfully!');
     } catch (error) {
-      showErrorAlert(error.message || 'Error saving category. Please try again.');
+      console.error('Error updating profile:', error);
+      showErrorAlert(error.message || 'Failed to update profile');
     }
   };
 
-  // Update delete handlers with proper headers and error handling
-  const handleDeleteMovie = async (movieId) => {
-    const confirmed = await showConfirmDialog('You won\'t be able to revert this!');
-    if (confirmed) {
-      try {
-        const response = await fetch(`/api/movies/${movieId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error deleting movie');
-        }
+  // Pagination
+  const totalPages = (data) => Math.ceil(data.length / itemsPerPage);
 
-        fetchDashboardData();
-        showSuccessAlert('Movie deleted successfully!');
-      } catch (error) {
-        showErrorAlert(error.message || 'Error deleting movie. Please try again.');
-      }
+  const paginatedUsers = Array.isArray(users) ? users
+    .filter(user =>
+      user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
+
+  const paginatedContacts = Array.isArray(contacts) ? contacts
+    .filter(contact =>
+      contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : [];
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo(0, 0);
+  };
+
+  // Dark Mode and Initial Load
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setIsDarkMode(savedDarkMode);
+    if (savedDarkMode) {
+      document.documentElement.classList.add('dark');
     }
+
+    fetchDashboardData();
+    fetchAdminProfile();
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode);
+    document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
-  const handleDeleteUser = async (userId) => {
-    const confirmed = await showConfirmDialog('You won\'t be able to revert this!');
-    if (confirmed) {
-      try {
-        const response = await fetch(`/api/users/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error deleting user');
-        }
-
-        fetchDashboardData();
-        showSuccessAlert('User deleted successfully!');
-      } catch (error) {
-        showErrorAlert(error.message || 'Error deleting user. Please try again.');
-      }
-    }
-  };
-
-  const handleDeleteCategory = async (categoryId) => {
-    const confirmed = await showConfirmDialog('You won\'t be able to revert this!');
-    if (confirmed) {
-      try {
-        const response = await fetch(`/api/categories/${categoryId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error deleting category');
-        }
-
-        fetchDashboardData();
-        showSuccessAlert('Category deleted successfully!');
-      } catch (error) {
-        showErrorAlert(error.message || 'Error deleting category. Please try again.');
-      }
-    }
-  };
-
-   // Contact handlers
-   const handleDeleteContact = async (contactId) => {
-    const confirmed = await showConfirmDialog('You won\'t be able to revert this!');
-    if (confirmed) {
-      try {
-        const response = await fetch(`/api/contacts/${contactId}`, {
-          method: 'DELETE',
-          headers: {
-            'X-CSRF-TOKEN': getCsrfToken(),
-            'Accept': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error deleting contact');
-        }
-
-        fetchDashboardData();
-        showSuccessAlert('Contact deleted successfully!');
-      } catch (error) {
-        showErrorAlert(error.message || 'Error deleting contact. Please try again.');
-      }
-    }
-  };
-
-  const handleReply = async (e) => {
-    e.preventDefault();
-    // Here you would typically integrate with your email service
-    showSuccessAlert(`Reply sent to ${selectedContact.email}`);
-    setShowReplyModal(false);
-    setReplyMessage('');
-    setSelectedContact(null);
-  };
-
-  const resetMovieForm = () => {
-    setMovieFormData({
-      title: '',
-      category_id: '',
-      genre: '',
-      description: '',
-      release_date: '',
-      rating: '',
-      poster_url: '',
-      trailer_url: '',
-      director: '',
-      cast: ''
-    });
-    setSelectedMovie(null);
-  };
-
-  const resetCategoryForm = () => {
-    setCategoryFormData({
-      name: ''
-    });
-    setSelectedCategory(null);
-  };
-
-  const filteredMovies = movies.filter(movie => 
-    movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    movie.genre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    movie.director?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredContacts = contacts.filter(contact =>
-    contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
+  // Components
   const ContactsView = () => (
-    <div className="p-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold dark:text-white">Contact Messages</h2>
+    <motion.div className="p-6" initial="hidden" animate="visible" variants={fadeIn}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold dark:text-white flex items-center">
+              <MessageSquare className="w-6 h-6 mr-2 text-red-500" />
+              Contact Messages
+            </h2>
             <div className="relative w-64">
               <input
                 type="text"
                 placeholder="Search messages..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
               />
               <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredContacts.map((contact) => (
-                  <tr key={contact.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{contact.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{contact.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{contact.subject}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{contact.message}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          setSelectedContact(contact);
-                          setShowReplyModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">Loading contacts...</p>
+            </div>
+          ) : paginatedContacts.length === 0 ? (
+            <div className="text-center py-12">
+              <MessageSquare className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3 mx-auto" />
+              <p className="text-gray-500 dark:text-gray-400">No contact messages found.</p>
+            </div>
+          ) : (
+            <>
+              <motion.div 
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="overflow-x-auto"
+              >
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subject</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Message</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {paginatedContacts.map((contact) => (
+                      <motion.tr 
+                        key={contact.id}
+                        variants={slideUp}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150"
                       >
-                        Reply
-                      </button>
-                      <button
-                        onClick={() => handleDeleteContact(contact.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{contact.name || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{contact.email || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{contact.subject || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{contact.message || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+              {totalPages(contacts.filter(contact =>
+                contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+              )) > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 mt-4">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(Math.min(totalPages(contacts.filter(contact =>
+                        contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )), currentPage + 1))}
+                      disabled={currentPage === totalPages(contacts.filter(contact =>
+                        contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                      ))}
+                      className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === totalPages(contacts.filter(contact =>
+                          contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                        )) 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                        <span className="font-medium">
+                          {Math.min(currentPage * itemsPerPage, contacts.filter(contact =>
+                            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length)}
+                        </span>{' '}
+                        of{' '}
+                        <span className="font-medium">
+                          {contacts.filter(contact =>
+                            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length}
+                        </span>{' '}
+                        results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button
+                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 ${
+                            currentPage === 1 
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed' 
+                              : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                        {[...Array(totalPages(contacts.filter(contact =>
+                          contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                        )))].map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handlePageChange(i + 1)}
+                            className={`relative inline-flex items-center px-4 py-2 border ${
+                              currentPage === i + 1
+                                ? 'z-10 bg-red-50 dark:bg-red-900 border-red-500 dark:border-red-500 text-red-600 dark:text-red-200'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => handlePageChange(Math.min(totalPages(contacts.filter(contact =>
+                            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                          )), currentPage + 1))}
+                          disabled={currentPage === totalPages(contacts.filter(contact =>
+                            contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ))}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 ${
+                            currentPage === totalPages(contacts.filter(contact =>
+                              contact.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              contact.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+                            )) 
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                              : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-
-      {/* Reply Modal */}
-      {showReplyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold dark:text-white">
-                  Reply to {selectedContact.name}
-                </h3>
-                <button onClick={() => setShowReplyModal(false)}>
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleReply} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">To:</label>
-                  <input
-                    type="text"
-                    value={selectedContact.email}
-                    disabled
-                    className="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Subject:</label>
-                  <input
-                    type="text"
-                    value={`Re: ${selectedContact.subject}`}
-                    disabled
-                    className="w-full p-2 border rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Message:</label>
-                  <textarea
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    rows={6}
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowReplyModal(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Send Reply
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 
   const UsersView = () => (
-    <div className="p-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold dark:text-white">Users</h2>
+    <motion.div className="p-6" initial="hidden" animate="visible" variants={fadeIn}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold dark:text-white flex items-center">
+              <Users className="w-6 h-6 mr-2 text-red-500" />
+              Users Management
+            </h2>
             <div className="relative w-64">
               <input
                 type="text"
                 placeholder="Search users..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
               />
               <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
-                    </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.is_active 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
-                        {user.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td> */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  const CategoriesView = () => (
-    <div className="p-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold dark:text-white">Categories</h2>
-            <div className="flex space-x-4">
-              <div className="relative w-64">
-                <input
-                  type="text"
-                  placeholder="Search categories..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-                <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-              </div>
-              <button
-                onClick={() => {
-                  resetCategoryForm();
-                  setShowCategoryModal(true);
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center"
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
+              <p className="mt-2 text-gray-500 dark:text-gray-400">Loading users...</p>
+            </div>
+          ) : paginatedUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3 mx-auto" />
+              <p className="text-gray-500 dark:text-gray-400">No users found.</p>
+            </div>
+          ) : (
+            <>
+              <motion.div 
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+                className="overflow-x-auto"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Category
-              </button>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredCategories.map((category) => (
-                  <tr key={category.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{category.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          setSelectedCategory(category);
-                          setCategoryFormData(category);
-                          setShowCategoryModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Joined</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {paginatedUsers.map((user) => (
+                      <motion.tr 
+                        key={user.id}
+                        variants={slideUp}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-150"
                       >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCategory(category.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Modal */}
-      {showCategoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold dark:text-white">
-                  {selectedCategory ? 'Edit Category' : 'Add New Category'}
-                </h3>
-                <button onClick={() => setShowCategoryModal(false)}>
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCategorySubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={categoryFormData.name}
-                    onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div className="flex justify-end space-x-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowCategoryModal(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                  >
-                    {selectedCategory ? 'Update Category' : 'Create Category'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const MoviesView = () => (
-    <div className="p-6">
-  
-      {/* Search & Add Bar */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-        <div className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          
-          {/* Search */}
-          <div className="relative w-full sm:w-96">
-            <input
-              type="text"
-              placeholder="Search movies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>          
-        </div>
-      </div>
-  
-      {/* Movies Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredMovies.map((movie) => (
-          <div key={movie.id} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            
-            {/* Poster */}
-            <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-              {movie.poster_url ? (
-                <img 
-                  src={movie.poster_url} 
-                  alt={movie.title}
-                  className="w-full h-48 object-cover"
-                />
-              ) : (
-                <div className="w-full h-48 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
-                  <Clapperboard className="w-12 h-12 text-gray-400" />
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name || 'N/A'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{user.email || 'N/A'}</div>
+                        </td>
+                       
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            user.status === 'active' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                          }`}>
+                            {user.status === 'active' ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => handleToggleUserStatus(user.id, user.status)}
+                            className={`px-3 py-1 rounded-md ${
+                              user.status === 'active'
+                                ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
+                                : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30'
+                            } transition-colors duration-300 flex items-center gap-1`}
+                          >
+                            {user.status === 'active' ? (
+                              <>
+                                <EyeOff className="w-4 h-4" />
+                                <span>Deactivate</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-4 h-4" />
+                                <span>Activate</span>
+                              </>
+                            )}
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </motion.div>
+              {totalPages(users.filter(user =>
+                user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+              )) > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 mt-4">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === 1 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(Math.min(totalPages(users.filter(user =>
+                        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )), currentPage + 1))}
+                      disabled={currentPage === totalPages(users.filter(user =>
+                        user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                      ))}
+                      className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                        currentPage === totalPages(users.filter(user =>
+                          user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                        )) 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                        <span className="font-medium">
+                          {Math.min(currentPage * itemsPerPage, users.filter(user =>
+                            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length)}
+                        </span>{' '}
+                        of{' '}
+                        <span className="font-medium">
+                          {users.filter(user =>
+                            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length}
+                        </span>{' '}
+                        results
+                      </p>
+                    </div>
+                    <div>
+                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <button
+                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 ${
+                            currentPage === 1 
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed' 
+                              : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                        {[...Array(totalPages(users.filter(user =>
+                          user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                        )))].map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handlePageChange(i + 1)}
+                            className={`relative inline-flex items-center px-4 py-2 border ${
+                              currentPage === i + 1
+                                ? 'z-10 bg-red-50 dark:bg-red-900 border-red-500 dark:border-red-500 text-red-600 dark:text-red-200'
+                                : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => handlePageChange(Math.min(totalPages(users.filter(user =>
+                            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                          )), currentPage + 1))}
+                          disabled={currentPage === totalPages(users.filter(user =>
+                            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                          ))}
+                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 ${
+                            currentPage === totalPages(users.filter(user =>
+                              user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              user.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                            )) 
+                              ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                              : 'bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-  
-            {/* Movie Info */}
-            <div className="p-4">
-              <h3 className="font-semibold text-lg mb-2 dark:text-white">{movie.title}</h3>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                  <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{movie.genre}</span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                  {movie.description}
-                </p>
-  
-                {/* Actions */}
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Rating: {movie.rating}/10
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedMovie(movie);
-                        setMovieFormData(movie);
-                        setShowMovieModal(true);
-                      }}
-                      className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMovie(movie.id)}
-                      className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                    >
-                      <Trash className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+            </>
+          )}
+        </div>
       </div>
-  
-      {/* Movie Modal */}
-      {showMovieModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full">
-            <div className="p-6">
-  
-              {/* Modal Header */}
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold dark:text-white">
-                  {selectedMovie ? 'Edit Movie' : 'Add New Movie'}
-                </h3>
-                <button onClick={() => setShowMovieModal(false)}>
-                  <X className="w-6 h-6" />
+    </motion.div>
+  );
+
+  const ProfileView = () => (
+    <motion.div className="p-6" initial="hidden" animate="visible" variants={fadeIn}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700">
+        <div className="p-6">
+          <h2 className="text-xl font-semibold mb-6 dark:text-white flex items-center">
+            <User className="w-6 h-6 mr-2 text-red-500" />
+            Admin Profile
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <motion.div 
+                className="flex flex-col items-center space-y-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <div className="relative group">
+                  <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-4 border-red-100 dark:border-red-900/30 flex items-center justify-center">
+                    {imagePreview ? (
+                      <img 
+                        src={imagePreview} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-20 h-20 text-gray-400" />
+                    )}
+                  </div>
+                  <div 
+                    className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <UploadCloud className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-4 py-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition duration-300 flex items-center"
+                >
+                  <UploadCloud className="w-5 h-5 mr-2" />
+                  Change Photo
                 </button>
-              </div>
-  
-              {/* Modal Form */}
-              <form onSubmit={handleMovieSubmit} className="space-y-4">
-  
-                {/* Title */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    type="text"
-                    value={movieFormData.title}
-                    onChange={(e) => setMovieFormData({ ...movieFormData, title: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  />
-                </div>
-  
-                {/* Genre */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Genre</label>
-                  <input
-                    type="text"
-                    value={movieFormData.genre}
-                    onChange={(e) => setMovieFormData({ ...movieFormData, genre: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  />
-                </div>
-  
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    value={movieFormData.description}
-                    onChange={(e) => setMovieFormData({ ...movieFormData, description: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    rows={3}
-                    required
-                  />
-                </div>
-  
-                {/* Release & Rating */}
-                <div className="grid grid-cols-2 gap-4">
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleProfileImageChange}
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Recommended: Square image, at least 300x300 pixels
+                </p>
+              </motion.div>
+            </div>
+            <div className="lg:col-span-2">
+              <form onSubmit={handleProfileUpdate} className="space-y-6">
+                <motion.div 
+                  className="space-y-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   <div>
-                    <label className="block text-sm font-medium mb-1">Release Date</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                     <input
-                      type="date"
-                      value={movieFormData.release_date}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, release_date: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      type="text"
+                      name="name"
+                      value={profileForm.name}
+                      onChange={handleProfileInputChange}
                       required
+                      className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Rating</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
                     <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.1"
-                      value={movieFormData.rating}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, rating: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      type="email"
+                      name="email"
+                      value={profileForm.email}
+                      onChange={handleProfileInputChange}
                       required
+                      className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
                     />
                   </div>
-                </div>
-  
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
-                  <select
-                    value={movieFormData.category_id}
-                    onChange={(e) => setMovieFormData({ ...movieFormData, category_id: e.target.value })}
-                    className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-  
-                {/* Poster & Trailer URLs */}
-                <div className="grid grid-cols-2 gap-4">
+                </motion.div>
+                <motion.div 
+                  className="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <h3 className="text-lg font-medium dark:text-white">Change Password</h3>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Poster URL</label>
-                    <input
-                      type="text"
-                      value={movieFormData.poster_url}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, poster_url: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Current Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="currentPassword"
+                        value={profileForm.currentPassword}
+                        onChange={handleProfileInputChange}
+                        className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Eye className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Trailer URL</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
                     <input
-                      type="text"
-                      value={movieFormData.trailer_url}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, trailer_url: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    />
-                  </div>
-                </div>
-  
-                {/* Director & Cast */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Director</label>
-                    <input
-                      type="text"
-                      value={movieFormData.director}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, director: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      type={showPassword ? "text" : "password"}
+                      name="newPassword"
+                      value={profileForm.newPassword}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Cast</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
                     <input
-                      type="text"
-                      value={movieFormData.cast}
-                      onChange={(e) => setMovieFormData({ ...movieFormData, cast: e.target.value })}
-                      className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={profileForm.confirmPassword}
+                      onChange={handleProfileInputChange}
+                      className="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-red-500 transition duration-300"
                     />
                   </div>
-                </div>
-  
-                {/* Modal Actions */}
-                <div className="flex justify-end space-x-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowMovieModal(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200"
-                  >
-                    Cancel
-                  </button>
+                </motion.div>
+                <motion.div 
+                  className="flex justify-end"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg flex items-center transition duration-300"
                   >
-                    {selectedMovie ? 'Update Movie' : 'Create Movie'}
+                    <Save className="w-5 h-5 mr-2" />
+                    Save Changes
                   </button>
-                </div>
+                </motion.div>
               </form>
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </motion.div>
+  );
+
+  const DashboardView = () => (
+    <motion.div className="p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6" variants={staggerContainer} initial="hidden" animate="visible">
+        <motion.div className="bg-gradient-to-r from-red-500 to-purple-600 rounded-lg shadow-lg overflow-hidden" variants={slideUp}>
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-white text-opacity-70 text-sm uppercase font-medium tracking-wider">Total Users</p>
+              <h3 className="text-3xl font-bold text-white mt-1">{totalUsers}</h3>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="bg-black bg-opacity-10 px-6 py-2">
+            <p className="text-white text-opacity-80 text-sm flex items-center">
+              <Activity className="w-4 h-4 mr-1" />
+              {activeUsers} active users
+            </p>
+          </div>
+        </motion.div>
+        <motion.div className="bg-gradient-to-r from-pink-500 to-red-500 rounded-lg shadow-lg overflow-hidden" variants={slideUp}>
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-white text-opacity-70 text-sm uppercase font-medium tracking-wider">Messages</p>
+              <h3 className="text-3xl font-bold text-white mt-1">{contacts.length}</h3>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="bg-black bg-opacity-10 px-6 py-2">
+            <p className="text-white text-opacity-80 text-sm flex items-center">
+              <Calendar className="w-4 h-4 mr-1" />
+              Updated today
+            </p>
+          </div>
+        </motion.div>
+        <motion.div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg shadow-lg overflow-hidden" variants={slideUp}>
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-white text-opacity-70 text-sm uppercase font-medium tracking-wider">Active Rate</p>
+              <h3 className="text-3xl font-bold text-white mt-1">
+                {totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}%
+              </h3>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="bg-black bg-opacity-10 px-6 py-2">
+            <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
+              <div 
+                className="bg-white rounded-full h-2" 
+                style={{ width: `${totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0}%` }}
+              ></div>
+            </div>
+          </div>
+        </motion.div>
+        <motion.div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg shadow-lg overflow-hidden" variants={slideUp}>
+          <div className="p-6 flex items-center justify-between">
+            <div>
+              <p className="text-white text-opacity-70 text-sm uppercase font-medium tracking-wider">Admin</p>
+              <h3 className="text-2xl font-bold text-white mt-1 truncate">{adminProfile.name || 'Admin'}</h3>
+            </div>
+            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="bg-black bg-opacity-10 px-6 py-2">
+            <button 
+              onClick={() => setActiveView('profile')}
+              className="text-white text-opacity-80 text-sm flex items-center hover:text-opacity-100 transition duration-300"
+            >
+              <Settings className="w-4 h-4 mr-1" />
+              Manage Profile
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div 
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white flex items-center">
+              <Activity className="w-5 h-5 mr-2 text-red-500" />
+              Recent Activity
+            </h2>
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">Loading activity...</p>
+              </div>
+            ) : (
+              <motion.div 
+                className="space-y-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {contacts.length > 0 && (
+                  <motion.div 
+                    variants={slideUp}
+                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-200"
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/20 flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5 text-pink-500" />
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">New contact message</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {contacts[0].name} sent a message about {contacts[0].subject}
+                      </p>
+                    </div>
+                    <div className="ml-2 flex-shrink-0">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400">
+                        New
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+                <motion.div 
+                  variants={slideUp}
+                  className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-200"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-red-500" />
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">User activity</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {totalUsers} total users in the system
+                    </p>
+                  </div>
+                  <div className="ml-2 flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                      Today
+                    </span>
+                  </div>
+                </motion.div>
+                <motion.div 
+                  variants={slideUp}
+                  className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-200"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-emerald-500" />
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Active users</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {activeUsers} active users out of {totalUsers} total users
+                    </p>
+                  </div>
+                  <div className="ml-2 flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+                      Updated
+                    </span>
+                  </div>
+                </motion.div>
+                <motion.div 
+                  variants={slideUp}
+                  className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-200"
+                >
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-amber-500" />
+                    </div>
+                  </div>
+                  <div className="ml-4 flex-1">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Admin login</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Last login was {new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="ml-2 flex-shrink-0">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+                      Today
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+        <motion.div 
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-100 dark:border-gray-700"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold dark:text-white flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2 text-red-500" />
+                Recent Messages
+              </h2>
+              <button 
+                onClick={() => setActiveView('contacts')}
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium flex items-center"
+              >
+                View All
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+            {isLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-red-500 border-t-transparent"></div>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">Loading messages...</p>
+              </div>
+            ) : contacts.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageSquare className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3 mx-auto" />
+                <p className="text-gray-500 dark:text-gray-400">No messages found.</p>
+              </div>
+            ) : (
+              <motion.div 
+                className="space-y-4"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
+              >
+                {paginatedContacts.map((contact) => (
+                  <motion.div 
+                    key={contact.id}
+                    variants={slideUp}
+                    className="flex items-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition duration-200"
+                  >
+                    <div className="flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                        <User className="w-5 h-5 text-red-500" />
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{contact.name || 'N/A'}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{contact.message || 'N/A'}</p>
+                    </div>
+                    <div className="ml-2 flex-shrink-0">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                        {contact.created_at ? new Date(contact.created_at).toLocaleDateString() : 'N/A'}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <Head title={activeView.charAt(0).toUpperCase() + activeView.slice(1)} />
-      
-      {/* Sidebar */}
       <div className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-800 w-64 shadow-lg transform transition-transform duration-300 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        {/* Logo */}
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
           <div className="flex items-center space-x-2">
             <Clapperboard className="w-8 h-8 text-red-500" />
@@ -931,8 +1194,6 @@ const AdminDashboard = () => {
             <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
-
-        {/* Navigation */}
         <nav className="p-4">
           <ul className="space-y-2">
             <li>
@@ -950,19 +1211,6 @@ const AdminDashboard = () => {
             </li>
             <li>
               <button
-                onClick={() => setActiveView('movies')}
-                className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-                  activeView === 'movies'
-                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-                }`}
-              >
-                <Clapperboard className="w-5 h-5" />
-                <span>Movies</span>
-              </button>
-            </li>
-            <li>
-              <button
                 onClick={() => setActiveView('users')}
                 className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
                   activeView === 'users'
@@ -975,58 +1223,45 @@ const AdminDashboard = () => {
               </button>
             </li>
             <li>
-            {/* <button
-  onClick={() => setActiveView('categories')}
-  className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-    activeView === 'categories'
-      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-  }`}
->
-<SquareStack className="w-5 h-5" />
-  <span>Categories</span>
-</button> */}
-
-</li>
-<li>
-  <button
-    onClick={() => setActiveView('contacts')}
-    className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-      activeView === 'contacts'
-        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-    }`}
-  >
-    <MessageSquare className="w-5 h-5" />
-    <span>Contacts</span>
-  </button>
-</li>
-<li>
-  <button
-    onClick={() => setActiveView('profile')}
-    className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-      activeView === 'profile'
-        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-    }`}
-  >
-    <User className="w-5 h-5" />
-    <span>Profile</span>
-  </button>
-</li>
-            {/* <li>
-              <button className="w-full flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">
-                <Settings className="w-5 h-5" />
-                <span>Settings</span>
+              <button
+                onClick={() => setActiveView('contacts')}
+                className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
+                  activeView === 'contacts'
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                }`}
+              >
+                <MessageSquare className="w-5 h-5" />
+                <span>Contacts</span>
               </button>
-            </li> */}
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveView('profile')}
+                className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
+                  activeView === 'profile'
+                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
+                }`}
+              >
+                <User className="w-5 h-5" />
+                <span>Profile</span>
+              </button>
+            </li>
           </ul>
         </nav>
+        <div className="absolute bottom-4 left-4 right-4">
+        
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 mt-2"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
-
-      {/* Main Content */}
       <div className={`${isSidebarOpen ? 'lg:ml-64' : ''} transition-margin duration-300`}>
-        {/* Top Bar */}
         <div className="bg-white dark:bg-gray-800 shadow-sm">
           <div className="flex items-center justify-between p-4">
             <button 
@@ -1035,104 +1270,26 @@ const AdminDashboard = () => {
             >
               <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             </button>
-
             <div className="flex items-center space-x-4">
-            <button
-    onClick={() => setActiveView('contacts')}
-    className={`w-full flex items-center space-x-2 p-2 rounded-lg ${
-      activeView === 'contacts'
-        ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'
-    }`}
-  >
-                <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-                
-              </button>
-              <form action="/admin/logout" method="POST">
-              <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')} />
-      <button type="submit" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-        <LogOut className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-      </button>
-    </form>
+            
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                {adminProfile.avatar ? (
+                  <img 
+                    src={adminProfile.avatar} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Dashboard Content */}
-        {activeView === 'dashboard' ? (
-          <div className="p-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-gray-500 dark:text-gray-400">Total Movies</h3>
-                  <Clapperboard className="w-6 h-6 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold mt-2 dark:text-white">{movies.length}</p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-gray-500 dark:text-gray-400">Total Users</h3>
-                  <Users className="w-6 h-6 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold mt-2 dark:text-white">{totalUsers}</p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-gray-500 dark:text-gray-400">Total Watches</h3>
-                  <Eye className="w-6 h-6 text-red-500" />
-                </div>
-                <p className="text-2xl font-bold mt-2 dark:text-white">0</p>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-              <div className="p-6">
-                <h2 className="text-lg font-semibold mb-4 dark:text-white">Recent Activity</h2>
-                <div className="space-y-4">
-                  {/* Recent activities will be mapped here */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-red-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium dark:text-white">New user registration</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Arsenio Bates signed up</p>
-                      </div>
-                    </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">1 hour ago</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-                        <Clapperboard className="w-5 h-5 text-red-500" />
-                      </div>
-                      <div>
-                        <p className="font-medium dark:text-white">New movie added</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">The Matrix Resurrections</p>
-                      </div>
-                    </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">1 hour ago</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : activeView === 'movies' ? (
-          <MoviesView />
-        ) : activeView === 'users' ? (
-          <UsersView />
-        ) : activeView === 'categories' ? (
-          <CategoriesView />
-         ) : activeView === 'contacts' ? (
-            <ContactsView />
-          ) : activeView === 'profile' ? (
-            <ProfileView />
-        ) : null}
+        {activeView === 'dashboard' && <DashboardView />}
+        {activeView === 'users' && <UsersView />}
+        {activeView === 'contacts' && <ContactsView />}
+        {activeView === 'profile' && <ProfileView />}
       </div>
     </div>
   );

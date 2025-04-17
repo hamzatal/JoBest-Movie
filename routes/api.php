@@ -79,5 +79,3 @@ Route::get('users/{user}', [UserController::class, 'show']);
 Route::delete('users/{user}', [UserController::class, 'destroy']);
 
 Route::get('/subscriptions/revenue', [SubscriptionController::class, 'getTotalRevenue']);
-
-

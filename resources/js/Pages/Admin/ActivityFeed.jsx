@@ -35,7 +35,7 @@ const ActivityFeed = () => {
     };
 
     fetchActivities();
-    const interval = setInterval(fetchActivities, 60000); // Refresh every minute
+    const interval = setInterval(fetchActivities, 6000); // Refresh every minute
     return () => clearInterval(interval);
   }, []);
 

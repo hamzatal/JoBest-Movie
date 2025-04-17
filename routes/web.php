@@ -8,6 +8,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -100,9 +101,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('admin/logout', [LoginController::class, 'destroy'])->name('admin.logout');
     Route::get('admin/dashboard', fn() => Inertia::render('admin/Dashboard'))->name('admin.dashboard');
 
-    Route::get('/admin/profile', [AdminProfileController::class, 'show']);
-    Route::put('/admin/profile', [AdminProfileController::class, 'update']);
-
     Route::get('/admin/movies', 'Admin\MovieController@index')->name('admin.movies');
     Route::get('/admin/categories', 'Admin\CategoryController@index')->name('admin.categories');
     Route::get('/admin/users', 'Admin\UserController@index')->name('admin.users');
@@ -115,6 +113,8 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::get('/admin/settings', 'Admin\SettingController@index')->name('admin.settings');
     Route::post('/admin/settings', 'Admin\SettingController@update')->name('admin.settings.update');
+
+    Route::get('/admin/contacts', [AdminController::class, 'showContacts'])->name('admin.contacts');
 });
 
 //! ==================== FALLBACK ROUTE ====================
