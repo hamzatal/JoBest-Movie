@@ -18,7 +18,6 @@ class Admin extends Authenticatable
         'avatar',
         'created_at',
         'updated_at',
-
     ];
 
     protected $hidden = [

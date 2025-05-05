@@ -23,11 +23,14 @@ class LoginController extends Controller
 
         if (Auth::guard('admin')->attempt($credentials, $request->remember)) {
             $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+
+            // Return an Inertia redirect to the admin dashboard
+            return redirect()->route('admin.dashboard');
         }
+
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ]);
+        ])->onlyInput('email');
     }
 
     public function destroy(Request $request)
@@ -37,6 +40,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Return an Inertia redirect to the admin login page
         return redirect()->route('admin.login');
     }
 }
