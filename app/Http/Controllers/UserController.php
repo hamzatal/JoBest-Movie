@@ -48,24 +48,5 @@ class UserController extends Controller
         }
     }
 
-    // Delete a user by ID
-    public function destroy($id)
-    {
-        try {
-            $user = User::find($id);
-
-            if (!$user) {
-                return response()->json(['message' => 'User not found.'], 404); // Not Found
-            }
-
-            $user->delete();
-
-            return response()->json(['message' => 'User deleted successfully.'], 200);
-        } catch (Exception $e) {
-            return response()->json([
-                'message' => 'An error occurred while deleting the user.',
-                'error' => $e->getMessage(),
-            ], 500); // Internal Server Error
-        }
-    }
+    
 }
