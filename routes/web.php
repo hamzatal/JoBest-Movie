@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\AdminAuth\ProfileController as AdminProfileController;
 use App\Http\Controllers\AdminAuth\LoginController;
+use App\Http\Controllers\AdminAuth\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminAuth\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -82,30 +83,31 @@ Route::middleware(['auth'])->group(function () {
 });
 
 //! ==================== ADMIN AUTHENTICATION ROUTES ====================
-Route::middleware('guest:admin')->group(function () {
-    Route::get('admin/login', [LoginController::class, 'create'])->name('admin.login');
-    Route::post('admin/login', [LoginController::class, 'store']);
-});
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('guest:admin')->group(function () {
+        Route::get('login', [LoginController::class, 'create'])->name('login');
+        Route::post('login', [LoginController::class, 'store']);
+    });
 
-//! ==================== ADMIN PROTECT I'D ROUTES ====================
-Route::middleware('auth:admin')->group(function () {
-    Route::post('admin/logout', [LoginController::class, 'destroy'])->name('admin.logout');
-    Route::get('admin/dashboard', fn() => Inertia::render('Admin/Dashboard'))->name('admin.dashboard');
+    Route::middleware('auth:admin')->group(function () {
+        Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/admin/movies', 'Admin\MovieController@index')->name('admin.movies');
-    Route::get('/admin/categories', 'Admin\CategoryController@index')->name('admin.categories');
-    Route::get('/admin/users', 'Admin\UserController@index')->name('admin.users');
-    Route::get('/admin/users/{user}', 'Admin\UserController@show')->name('admin.users.show');
-    Route::put('/admin/users/{user}', 'Admin\UserController@update')->name('admin.users.update');
+        //? Admin Profile
+        Route::get('profile', [AdminController::class, 'getAdminProfile'])->name('profile');
+        Route::put('profile', [AdminController::class, 'updateAdminProfile'])->name('profile.update');
+        Route::post('profile', [AdminController::class, 'updateAdminProfile'])->name('profile.update.post');
 
-    Route::get('/admin/analytics', 'Admin\AnalyticsController@index')->name('admin.analytics');
-    Route::get('/admin/analytics/users', 'Admin\AnalyticsController@users')->name('admin.analytics.users');
-    Route::get('/admin/analytics/movies', 'Admin\AnalyticsController@movies')->name('admin.analytics.movies');
+        //? Contact Messages
+        Route::get('messages', [AdminController::class, 'showContacts'])->name('messages');
+        Route::get('contacts', [AdminController::class, 'showContacts'])->name('contacts');
+        Route::patch('messages/{id}/read', [AdminController::class, 'markAsRead'])->name('messages.read');
 
-    Route::get('/admin/settings', 'Admin\SettingController@index')->name('admin.settings');
-    Route::post('/admin/settings', 'Admin\SettingController@update')->name('admin.settings.update');
-
-    Route::get('/admin/contacts', [AdminController::class, 'showContacts'])->name('admin.contacts');
+        //? Users Management
+        Route::get('users', [AdminController::class, 'getUsers'])->name('users');
+        Route::post('users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+     
+    });
 });
 
 //! ==================== FALLBACK ROUTE ====================

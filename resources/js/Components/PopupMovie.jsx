@@ -66,19 +66,9 @@ const MoviePopup = ({
         }
     }, [movie?.id]);
 
-        const handleToggleWatchlist = async () => {
-            try {
-                const response = await api.post("/favorites", {
-                    movie_id: movie.id,
-                });
-        
-                if (response.status === 201) {
-                    setIsAdded(!isAdded);
-                    onAddToWatchlist(movie); 
-                }
-            } catch (error) {
-                console.error("Error adding to watchlist:", error);
-            }
+        const handleToggleWatchlist = () => {
+            setIsAdded(!isAdded);
+            onAddToWatchlist(movie, !isAdded);
         };
     const handleToggleTrailer = () => {
         setIsTrailerPlaying(!isTrailerPlaying);
@@ -178,8 +168,8 @@ const MoviePopup = ({
                             : "bg-gradient-to-br from-white to-gray-50 border-gray-200"
                     }`}
                     style={{
-                        '--scrollbar-track': isDarkMode ? '#1f2937' : '#f3f4f6',
-                        '--scrollbar-thumb': isDarkMode ? '#4b5563' : '#d1d5db',
+                        "--scrollbar-track": isDarkMode ? "#1f2937" : "#f3f4f6",
+                        "--scrollbar-thumb": isDarkMode ? "#4b5563" : "#d1d5db",
                     }}
                 >
                     {/* Background Image */}
@@ -257,7 +247,9 @@ const MoviePopup = ({
                                 animate={{ x: 0, opacity: 1 }}
                                 transition={{ delay: 0.4 }}
                                 className={`text-base leading-relaxed ${
-                                    isDarkMode ? "text-gray-300" : "text-gray-700"
+                                    isDarkMode
+                                        ? "text-gray-300"
+                                        : "text-gray-700"
                                 }`}
                             >
                                 {details.overview}
@@ -274,18 +266,27 @@ const MoviePopup = ({
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={handleToggleTrailer}
-                                    disabled={!canPlayTrailer || watchNowLoading}
+                                    disabled={
+                                        !canPlayTrailer || watchNowLoading
+                                    }
                                     className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 text-sm ${
                                         isDarkMode
                                             ? "bg-red-600 hover:bg-red-700 text-white"
                                             : "bg-red-500 hover:bg-red-600 text-white"
-                                    } ${(!canPlayTrailer || watchNowLoading) && "opacity-50 cursor-not-allowed"}`}
+                                    } ${
+                                        (!canPlayTrailer || watchNowLoading) &&
+                                        "opacity-50 cursor-not-allowed"
+                                    }`}
                                 >
                                     <PlayCircle className="w-5 h-5" />
                                     <span className="font-medium">
-                                        {watchNowLoading ? "Loading..." : 
-                                         !canPlayTrailer ? "No Trailer Available" :
-                                         isTrailerPlaying ? "Hide Trailer" : "Watch Trailer"}
+                                        {watchNowLoading
+                                            ? "Loading..."
+                                            : !canPlayTrailer
+                                            ? "No Trailer Available"
+                                            : isTrailerPlaying
+                                            ? "Hide Trailer"
+                                            : "Watch Trailer"}
                                     </span>
                                 </motion.button>
 
@@ -295,19 +296,19 @@ const MoviePopup = ({
                                     onClick={handleToggleWatchlist}
                                     className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 text-sm ${
                                         isDarkMode
-                                            ? "bg-gray-700 hover:bg-gray-600 text-white"
-                                            : "bg-gray-200 hover:bg-gray-300 text-gray-900"
+                                            ? "bg-gray-800 hover:bg-gray-700 text-white"
+                                            : "bg-gray-200 hover:bg-gray-300 text-black"
                                     }`}
                                 >
                                     {isAdded ? (
                                         <>
                                             <BookmarkCheck className="w-5 h-5 text-green-500" />
-                                            <span className="font-medium">Added</span>
+                                            <span>In Watchlist</span>
                                         </>
                                     ) : (
                                         <>
                                             <Bookmark className="w-5 h-5" />
-                                            <span className="font-medium">Add to Watchlist</span>
+                                            <span>Add to Watchlist</span>
                                         </>
                                     )}
                                 </motion.button>
@@ -322,26 +323,42 @@ const MoviePopup = ({
                             >
                                 {details.director && (
                                     <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">Director</span>
-                                        <p className="text-sm font-semibold">{details.director}</p>
+                                        <span className="text-xs uppercase tracking-wider opacity-70">
+                                            Director
+                                        </span>
+                                        <p className="text-sm font-semibold">
+                                            {details.director}
+                                        </p>
                                     </div>
                                 )}
                                 {details.cast && (
                                     <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">Cast</span>
-                                        <p className="text-sm font-semibold">{details.cast}</p>
+                                        <span className="text-xs uppercase tracking-wider opacity-70">
+                                            Cast
+                                        </span>
+                                        <p className="text-sm font-semibold">
+                                            {details.cast}
+                                        </p>
                                     </div>
                                 )}
                                 {details.production && (
                                     <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">Production</span>
-                                        <p className="text-sm font-semibold">{details.production}</p>
+                                        <span className="text-xs uppercase tracking-wider opacity-70">
+                                            Production
+                                        </span>
+                                        <p className="text-sm font-semibold">
+                                            {details.production}
+                                        </p>
                                     </div>
                                 )}
-                                {details.budget !== 'N/A' && (
+                                {details.budget !== "N/A" && (
                                     <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">Budget</span>
-                                        <p className="text-sm font-semibold">{details.budget}</p>
+                                        <span className="text-xs uppercase tracking-wider opacity-70">
+                                            Budget
+                                        </span>
+                                        <p className="text-sm font-semibold">
+                                            {details.budget}
+                                        </p>
                                     </div>
                                 )}
                             </motion.div>

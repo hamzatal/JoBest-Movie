@@ -9,7 +9,6 @@ import {
     Image,
     LogOut,
     Home,
-    Package2Icon,
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -17,9 +16,7 @@ export default function AdminSidebar() {
     const admin = props.auth?.admin || {};
     const adminName = admin?.name || "Admin";
     const adminInitial = adminName.charAt(0).toUpperCase();
-    const adminAvatar = admin?.avatar
-        ? `/storage/avatars/${admin.avatar}`
-        : null;
+    const adminAvatar = admin?.avatar ? `/storage/${admin.avatar}` : null;
 
     return (
         <div className="fixed inset-y-0 left-0 w-64 bg-gray-900 shadow-lg z-10">
@@ -41,7 +38,6 @@ export default function AdminSidebar() {
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #60a5fa;
           }
-       
           .custom-scrollbar {
             scrollbar-width: thin;
             scrollbar-color: #3b82f6 #1f2937;
@@ -61,7 +57,6 @@ export default function AdminSidebar() {
                             label="Dashboard"
                             icon={<Grid className="w-5 h-5 text-blue-400" />}
                         />
-                       
                         <SidebarLink
                             href="/admin/users"
                             label="Users"
@@ -74,17 +69,14 @@ export default function AdminSidebar() {
                                 <MessageSquare className="w-5 h-5 text-yellow-400" />
                             }
                         />
-                        
                     </nav>
                 </div>
                 <div className="p-5 border-t border-gray-800">
-                    {/* Home link */}
                     <SidebarLink
                         href="/"
                         label="Home"
                         icon={<Home className="w-5 h-5 text-blue-400" />}
                     />
-                    {/* Logout link */}
                     <Link
                         href={route("admin.logout")}
                         method="post"
@@ -94,9 +86,7 @@ export default function AdminSidebar() {
                         <LogOut className="w-5 h-5 text-red-400" />
                         <span>Log Out</span>
                     </Link>
-                    {/* Divider */}
                     <div className="border-t border-gray-800 my-4"></div>
-                    {/* Admin info (clickable to profile) */}
                     <Link
                         href="/admin/profile"
                         className="flex items-center space-x-3 hover:bg-gray-800 p-2 rounded-lg"
