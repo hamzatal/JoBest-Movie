@@ -4,7 +4,6 @@ use App\Http\Controllers\AdminAuth\ProfileController as AdminProfileController;
 use App\Http\Controllers\AdminAuth\LoginController;
 use App\Http\Controllers\AdminAuth\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\ProfileController;
@@ -64,8 +63,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 //! ==================== API ROUTES ====================
 Route::middleware(['auth', 'csrf'])->group(function () {
-    Route::apiResource('movies', MovieController::class);
-    Route::apiResource('categories', CategoryController::class);
     Route::apiResource('users', UserController::class);
 
     Route::get('/search/movies', 'SearchController@movies')->name('search.movies');
