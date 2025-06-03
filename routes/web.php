@@ -1,13 +1,8 @@
 <?php
 
-use App\Http\Controllers\AdminAuth\ProfileController as AdminProfileController;
 use App\Http\Controllers\AdminAuth\LoginController;
 use App\Http\Controllers\AdminAuth\AdminController;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\MovieController;
-use App\Http\Controllers\ChatBotController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminAuth\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -26,7 +21,6 @@ Route::get('/', function () {
 
 //! ==================== STATIC CONTENT PAGES ====================
 Route::get('/about-us', fn() => Inertia::render('about-us'))->name('about-us');
-Route::get('/contact-us', fn() => Inertia::render('contact-us'))->name('contact-us');
 Route::get('/ContactPage', fn() => Inertia::render('ContactPage'))->name('ContactPage');
 
 //! ==================== PAYMENT AND SUBSCRIPTION ROUTES ====================
@@ -54,29 +48,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/watchlist/add/{movie}', 'WatchlistController@add')->name('watchlist.add');
     Route::delete('/watchlist/remove/{movie}', 'WatchlistController@remove')->name('watchlist.remove');
     Route::get('/watchlist/items', 'WatchlistController@getItems')->name('watchlist.items');
-
-    Route::get('/preferences', 'PreferenceController@edit')->name('preferences.edit');
-    Route::patch('/preferences', 'PreferenceController@update')->name('preferences.update');
-
-    Route::get('/recommendations', 'RecommendationController@index')->name('recommendations');
-});
-
-//! ==================== API ROUTES ====================
-Route::middleware(['auth', 'csrf'])->group(function () {
-    Route::apiResource('users', UserController::class);
-
-    Route::get('/search/movies', 'SearchController@movies')->name('search.movies');
-    Route::get('/search/categories', 'SearchController@categories')->name('search.categories');
-
-    Route::post('/movies/{movie}/rate', 'RatingController@rate')->name('movies.rate');
-    Route::post('/movies/{movie}/review', 'ReviewController@store')->name('movies.review');
-    Route::get('/movies/{movie}/reviews', 'ReviewController@index')->name('movies.reviews');
-});
-
-//! ==================== CHATBOT API ====================
-Route::middleware(['auth'])->group(function () {
-    Route::post('/chatbot/message', [ChatBotController::class, 'processMessage'])->name('chatbot.message');
-    Route::get('/chatbot/history', [ChatBotController::class, 'getHistory'])->name('chatbot.history');
 });
 
 //! ==================== ADMIN AUTHENTICATION ROUTES ====================
