@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Services;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Facades\DB;
 
 class ChatGPTServices
 {
@@ -16,120 +16,15 @@ class ChatGPTServices
         $this->apiKey = env('OPENAI_API_KEY');
     }
 
-    /**
-     * Retrieve movie details from the database
-     *
-     * @param int $movieId
-     * @return array|string
-     */
-    public function getMovieDetails($movieId)
-    {
-        $movie = DB::table('movies')->where('id', $movieId)->first();
-
-        if ($movie) {
-            return [
-                'id' => $movie->id,
-                'title' => $movie->title,
-                'genre' => $movie->genre,
-                'description' => $movie->description,
-                'release_date' => $movie->release_date,
-                'rating' => $movie->rating,
-                'poster_url' => $movie->poster_url,
-                'trailer_url' => $movie->trailer_url,
-                'exists' => true
-            ];
-        }
-
-        return ['exists' => false];
-    }
-
-    /**
-     * Find similar movies based on genre or other criteria
-     *
-     * @param string $genre
-     * @param int $excludeMovieId
-     * @return array
-     */
-    public function findSimilarMovies($genre, $excludeMovieId)
-    {
-        return DB::table('movies')
-            ->where('genre', $genre)
-            ->where('id', '!=', $excludeMovieId)
-            ->limit(3)
-            ->get()
-            ->map(function($movie) {
-                return [
-                    'id' => $movie->id,
-                    'title' => $movie->title,
-                    'genre' => $movie->genre,
-                    'rating' => $movie->rating
-                ];
-            })
-            ->toArray();
-    }
-
-    /**
-     * Search for a movie and provide comprehensive response
-     *
-     * @param int $movieId
-     * @return array
-     */
-    public function searchMovie($movieId)
-    {
-        // Get movie details
-        $movieDetails = $this->getMovieDetails($movieId);
-
-        // If movie exists
-        if ($movieDetails['exists']) {
-            // Prepare response for existing movie
-            $response = [
-                'status' => 'found',
-                'message' => 'Movie is available on our site!',
-                'movie' => $movieDetails
-            ];
-
-            // Find similar movies
-            $similarMovies = $this->findSimilarMovies(
-                $movieDetails['genre'],
-                $movieDetails['id']
-            );
-
-            $response['similar_movies'] = $similarMovies;
-
-            return $response;
-        }
-
-        // If movie does not exist
-        try {
-            // Use ChatGPT to suggest a similar movie
-            $aiSuggestion = $this->askChatGPT(
-                "Suggest a similar movie to the movie with ID $movieId. " .
-                "Provide a brief description and why it might be interesting."
-            );
-
-            return [
-                'status' => 'not_found',
-                'message' => 'Unfortunately, this movie is not in our database.',
-                'ai_suggestion' => $aiSuggestion['choices'][0]['message']['content']
-            ];
-        } catch (\Exception $e) {
-            return [
-                'status' => 'error',
-                'message' => 'An error occurred while searching for the movie.',
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Ask ChatGPT for a movie-related query
-     *
-     * @param string $message
-     * @return array
-     */
-    public function askChatGPT($message)
+    public function analyzeSceneDescription(string $description): array
     {
         try {
+            // تحديد اللغة تلقائيًا
+            $lang = $this->isArabic($description) ? 'Arabic' : 'English';
+
+            // بناء البرومبت المناسب للغة
+            $prompt = $this->buildPrompt($description, $lang);
+
             $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
@@ -138,24 +33,69 @@ class ChatGPTServices
                 'json' => [
                     'model' => 'gpt-4',
                     'messages' => [
-                        ['role' => 'system', 'content' => 'You are a movie recommendation assistant.'],
-                        ['role' => 'user', 'content' => $message],
+                        ['role' => 'system', 'content' => "You are a helpful movie expert assistant. Reply in $lang only."],
+                        ['role' => 'user', 'content' => $prompt],
                     ],
-                    'max_tokens' => 200,
+                    'max_tokens' => 500,
                     'temperature' => 0.7,
                 ],
             ]);
 
-            $responseBody = json_decode($response->getBody()->getContents(), true);
-
-            if (isset($responseBody['choices'][0]['message']['content'])) {
-                return $responseBody;
-            }
-
-            return ['choices' => [['message' => ['content' => 'No meaningful response from ChatGPT.']]]];
+            $body = json_decode($response->getBody()->getContents(), true);
+            return [
+                'status' => 'success',
+                'language' => $lang,
+                'response' => $body['choices'][0]['message']['content'] ?? 'No response.',
+            ];
 
         } catch (RequestException $e) {
-            throw new \Exception('Error connecting to OpenAI API: ' . $e->getMessage());
+            return [
+                'status' => 'error',
+                'message' => 'Connection failed to ChatGPT.',
+                'error' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Unexpected error.',
+                'error' => $e->getMessage()
+            ];
         }
+    }
+
+    private function buildPrompt(string $description, string $lang): string
+    {
+        return <<<EOT
+You are an expert in movies and film recommendations. A user described a scene from a movie.
+
+Your tasks:
+1. Identify the most likely movie.
+2. Show the movie title in **both English and Arabic** like this: 🎬 اسم الفيلم: [العربية] ([English])
+3. Write a clear and cinematic summary of the movie in Arabic.
+4. Insert a separator line: "---".
+5. Suggest 5 similar movies: Write their **Arabic title**, and put the **English title in parentheses** next to each.
+
+Format your reply like this:
+
+🎬 اسم الفيلم: الاسم بالعربية (English Title)  
+📝 ملخص الفيلم:  
+[اكتب هنا ملخصًا موجزًا وجذابًا]
+
+---
+🎥 أفلام مشابهة:
+1. اسم بالعربية (English Title)
+2. ...
+3. ...
+4. ...
+5. ...
+
+وصف المستخدم للمشهد: "$description"
+EOT;
+    }
+
+
+    private function isArabic($text): bool
+    {
+        return preg_match('/\p{Arabic}/u', $text);
     }
 }

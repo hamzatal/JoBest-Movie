@@ -15,13 +15,13 @@ class ChatBotController extends Controller
         $this->chatGPTService = $chatGPTService;
     }
 
-    // Render ChatBot page
+    // Render the chatbot page
     public function index()
     {
         return Inertia::render('Chatbot');
     }
 
-    // Handle chat request
+    // Handle chatbot request
     public function chatbot(Request $request)
     {
         $message = $request->input('message');
@@ -30,13 +30,18 @@ class ChatBotController extends Controller
             return response()->json(['error' => 'Message is required'], 400);
         }
 
-        $response = $this->chatGPTService->askChatGPT($message);
+        $result = $this->chatGPTService->analyzeSceneDescription($message);
 
-        // Extract the response content
-        $chatGPTResponse = $response['choices'][0]['message']['content'] ?? 'No response from ChatGPT.';
+        if ($result['status'] === 'success') {
+            return response()->json([
+                'response' => $result['response'],
+                'language' => $result['language'],
+            ]);
+        }
 
         return response()->json([
-            'response' => $chatGPTResponse,
-        ]);
+            'error' => $result['message'] ?? 'An error occurred.',
+            'details' => $result['error'] ?? null,
+        ], 500);
     }
 }

@@ -8,7 +8,15 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Services\ChatGPTServices;
+use Illuminate\Http\Request;
 
+Route::post('/chatbot', function (Request $request) {
+    $chat = new ChatGPTServices();
+    $response = $chat->handleUserMessage($request->input('message'));
+
+    return response()->json(['response' => $response]);
+});
 //! ==================== MAIN PUBLIC ROUTES ====================
 Route::get('/', function () {
     return Inertia::render('Welcome', [
