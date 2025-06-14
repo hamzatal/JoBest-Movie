@@ -19,16 +19,13 @@ class ChatGPTServices
     public function analyzeSceneDescription(string $description): array
     {
         try {
-            // تحديد اللغة تلقائيًا
             $lang = $this->isArabic($description) ? 'Arabic' : 'English';
-
-            // بناء البرومبت المناسب للغة
             $prompt = $this->buildPrompt($description, $lang);
 
             $response = $this->client->post('https://api.openai.com/v1/chat/completions', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->apiKey,
-                    'Content-Type' => 'application/json',
+                    'Content-Type'  => 'application/json',
                 ],
                 'json' => [
                     'model' => 'gpt-4',
@@ -39,6 +36,7 @@ class ChatGPTServices
                     'max_tokens' => 500,
                     'temperature' => 0.7,
                 ],
+                'verify' => false, 
             ]);
 
             $body = json_decode($response->getBody()->getContents(), true);
@@ -92,7 +90,6 @@ Format your reply like this:
 وصف المستخدم للمشهد: "$description"
 EOT;
     }
-
 
     private function isArabic($text): bool
     {
