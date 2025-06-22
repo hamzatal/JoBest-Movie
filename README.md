@@ -101,11 +101,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Contact
 
-[]
-[Mohammad Al-Ashhab]
-[Salem Qandil]
-[Reem Switi]
-[Haneen Abu-Mazrou]
+
 
 
 Project Link: [https://github.com/HaneenAbumazrou/movie-webapp?tab=readme-ov-file)
