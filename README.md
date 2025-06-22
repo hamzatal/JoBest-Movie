@@ -101,7 +101,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Contact
 
-[Hamza Al-Tal]
+[]
 [Mohammad Al-Ashhab]
 [Salem Qandil]
 [Reem Switi]
