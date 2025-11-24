@@ -8,15 +8,24 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Services\ChatGPTServices;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
-Route::post('/chatbot', function (Request $request) {
-    $chat = new ChatGPTServices();
-    $response = $chat->handleUserMessage($request->input('message'));
+//! ==================== MOVIE PLAYER ROUTE (UPDATED) ====================
 
-    return response()->json(['response' => $response]);
-});
+Route::get('/watch/{tmdbId}', function ($tmdbId) {
+    $apiKey = env('TMDB_API_KEY');
+    $response = Http::get("https://api.themoviedb.org/3/movie/{$tmdbId}", [
+        'api_key' => $apiKey,
+        'language' => 'en-US',
+    ]);
+    $movieData = $response->json();
+    $movieTitle = $movieData['title'] ?? 'Unknown Movie';
+    return Inertia::render('MoviePlayer', [
+        'tmdbId' => $tmdbId,
+        'movieTitle' => $movieTitle,
+    ]);
+})->where('tmdbId', '[0-9]+')->name('movie.watch');
+
 //! ==================== MAIN PUBLIC ROUTES ====================
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -82,7 +91,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         //? Users Management
         Route::get('users', [AdminController::class, 'getUsers'])->name('users');
         Route::post('users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
-     
     });
 });
 

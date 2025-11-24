@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { X, PlayCircle, Bookmark, BookmarkCheck, Star, Clock } from "lucide-react";
+import {
+    X,
+    PlayCircle,
+    Bookmark,
+    BookmarkCheck,
+    Star,
+    Clock,
+    Film,
+} from "lucide-react";
+import { Link } from "@inertiajs/react"; // تم التعديل لاستخدام Inertia Link
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { fetchMovieDetails } from "./tmdb";
@@ -17,14 +26,14 @@ const MoviePopup = ({
     const [movieDetails, setMovieDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [trailerUrl, setTrailerUrl] = useState('');
+    const [trailerUrl, setTrailerUrl] = useState("");
 
     const getYoutubeVideoId = (url) => {
         if (!url) return null;
-        
+
         const patterns = [
             /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-            /^[a-zA-Z0-9_-]{11}$/
+            /^[a-zA-Z0-9_-]{11}$/,
         ];
 
         for (const pattern of patterns) {
@@ -47,7 +56,7 @@ const MoviePopup = ({
                 setLoading(true);
                 const details = await fetchMovieDetails(movie.id);
                 setMovieDetails(details);
-                
+
                 if (details.trailer_url) {
                     const videoId = getYoutubeVideoId(details.trailer_url);
                     if (videoId) {
@@ -66,10 +75,16 @@ const MoviePopup = ({
         }
     }, [movie?.id]);
 
-        const handleToggleWatchlist = () => {
-            setIsAdded(!isAdded);
-            onAddToWatchlist(movie, !isAdded);
-        };
+    const handleToggleWatchlist = () => {
+        setIsAdded(!isAdded);
+        onAddToWatchlist(movie, !isAdded);
+    };
+
+    const handleWatchNow = () => {
+        // This function will navigate to the new MoviePlayer page
+        // The navigation is handled by the Link component below
+    };
+
     const handleToggleTrailer = () => {
         setIsTrailerPlaying(!isTrailerPlaying);
     };
@@ -79,7 +94,7 @@ const MoviePopup = ({
             setWatchNowLoading(true);
             const userResponse = await axios.get("/user");
             const userId = userResponse.data.id;
-            
+
             await axios.post("/watched-movies", {
                 user_id: userId,
                 movie_id: movie.id,
@@ -96,7 +111,7 @@ const MoviePopup = ({
     const renderTrailerOrPoster = () => {
         if (isTrailerPlaying && trailerUrl) {
             return (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -115,7 +130,7 @@ const MoviePopup = ({
         }
 
         return (
-            <motion.div 
+            <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -130,17 +145,21 @@ const MoviePopup = ({
         );
     };
 
-    if (!movie || loading) return (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
-        </div>
-    );
+    if (!movie || loading)
+        return (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+            </div>
+        );
 
-    if (error) return (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
-            <div className="text-white text-xl">Error loading movie details: {error}</div>
-        </div>
-    );
+    if (error)
+        return (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center">
+                <div className="text-white text-xl">
+                    Error loading movie details: {error}
+                </div>
+            </div>
+        );
 
     const details = movieDetails || movie;
     const canPlayTrailer = Boolean(trailerUrl);
@@ -262,6 +281,24 @@ const MoviePopup = ({
                                 transition={{ delay: 0.5 }}
                                 className="flex flex-wrap gap-3"
                             >
+                                <Link
+                                    href={route("movie.watch", {
+                                        tmdbId: movie.id,
+                                    })}
+                                    className="w-full"
+                                >
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleWatchNow}
+                                        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-red-600 text-white font-semibold shadow-lg hover:bg-red-700 transition-all duration-300 disabled:opacity-50"
+                                        disabled={watchNowLoading}
+                                    >
+                                        <Film className="w-5 h-5" />
+                                        <span>مشاهدة الفيلم الآن</span>
+                                    </motion.button>
+                                </Link>
+
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
@@ -270,23 +307,16 @@ const MoviePopup = ({
                                         !canPlayTrailer || watchNowLoading
                                     }
                                     className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 text-sm ${
-                                        isDarkMode
-                                            ? "bg-red-600 hover:bg-red-700 text-white"
-                                            : "bg-red-500 hover:bg-red-600 text-white"
-                                    } ${
-                                        (!canPlayTrailer || watchNowLoading) &&
-                                        "opacity-50 cursor-not-allowed"
-                                    }`}
+                                        isTrailerPlaying
+                                            ? "bg-gray-600 text-white"
+                                            : "bg-blue-600 text-white hover:bg-blue-700"
+                                    } disabled:opacity-50`}
                                 >
                                     <PlayCircle className="w-5 h-5" />
-                                    <span className="font-medium">
-                                        {watchNowLoading
-                                            ? "Loading..."
-                                            : !canPlayTrailer
-                                            ? "No Trailer Available"
-                                            : isTrailerPlaying
-                                            ? "Hide Trailer"
-                                            : "Watch Trailer"}
+                                    <span>
+                                        {isTrailerPlaying
+                                            ? "إخفاء التريلر"
+                                            : "مشاهدة التريلر"}
                                     </span>
                                 </motion.button>
 
@@ -295,72 +325,22 @@ const MoviePopup = ({
                                     whileTap={{ scale: 0.95 }}
                                     onClick={handleToggleWatchlist}
                                     className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-300 text-sm ${
-                                        isDarkMode
-                                            ? "bg-gray-800 hover:bg-gray-700 text-white"
-                                            : "bg-gray-200 hover:bg-gray-300 text-black"
+                                        isAdded
+                                            ? "bg-green-600 text-white hover:bg-green-700"
+                                            : "bg-gray-700 text-white hover:bg-gray-600"
                                     }`}
                                 >
                                     {isAdded ? (
-                                        <>
-                                            <BookmarkCheck className="w-5 h-5 text-green-500" />
-                                            <span>In Watchlist</span>
-                                        </>
+                                        <BookmarkCheck className="w-5 h-5" />
                                     ) : (
-                                        <>
-                                            <Bookmark className="w-5 h-5" />
-                                            <span>Add to Watchlist</span>
-                                        </>
+                                        <Bookmark className="w-5 h-5" />
                                     )}
+                                    <span>
+                                        {isAdded
+                                            ? "تمت الإضافة"
+                                            : "أضف إلى قائمة المشاهدة"}
+                                    </span>
                                 </motion.button>
-                            </motion.div>
-
-                            {/* Additional Info Grid */}
-                            <motion.div
-                                initial={{ y: 50, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.6 }}
-                                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                            >
-                                {details.director && (
-                                    <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">
-                                            Director
-                                        </span>
-                                        <p className="text-sm font-semibold">
-                                            {details.director}
-                                        </p>
-                                    </div>
-                                )}
-                                {details.cast && (
-                                    <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">
-                                            Cast
-                                        </span>
-                                        <p className="text-sm font-semibold">
-                                            {details.cast}
-                                        </p>
-                                    </div>
-                                )}
-                                {details.production && (
-                                    <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">
-                                            Production
-                                        </span>
-                                        <p className="text-sm font-semibold">
-                                            {details.production}
-                                        </p>
-                                    </div>
-                                )}
-                                {details.budget !== "N/A" && (
-                                    <div className="space-y-2">
-                                        <span className="text-xs uppercase tracking-wider opacity-70">
-                                            Budget
-                                        </span>
-                                        <p className="text-sm font-semibold">
-                                            {details.budget}
-                                        </p>
-                                    </div>
-                                )}
                             </motion.div>
                         </div>
                     </div>
