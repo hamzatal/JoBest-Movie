@@ -295,7 +295,7 @@ const MoviePopup = ({
                                         disabled={watchNowLoading}
                                     >
                                         <Film className="w-5 h-5" />
-                                        <span>مشاهدة الفيلم الآن</span>
+                                        <span>Watch Full Movie Now</span>
                                     </motion.button>
                                 </Link>
 
