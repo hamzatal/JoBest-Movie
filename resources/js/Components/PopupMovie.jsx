@@ -8,7 +8,7 @@ import {
     Clock,
     Film,
 } from "lucide-react";
-import { Link } from "@inertiajs/react"; // تم التعديل لاستخدام Inertia Link
+import { Link } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { fetchMovieDetails } from "./tmdb";
@@ -315,8 +315,8 @@ const MoviePopup = ({
                                     <PlayCircle className="w-5 h-5" />
                                     <span>
                                         {isTrailerPlaying
-                                            ? "إخفاء التريلر"
-                                            : "مشاهدة التريلر"}
+                                            ? "Hide Trailer"
+                                            : "Watch Trailer"}
                                     </span>
                                 </motion.button>
 
@@ -337,8 +337,8 @@ const MoviePopup = ({
                                     )}
                                     <span>
                                         {isAdded
-                                            ? "تمت الإضافة"
-                                            : "أضف إلى قائمة المشاهدة"}
+                                            ? "Added"
+                                            : "Add to Watchlist"}
                                     </span>
                                 </motion.button>
                             </motion.div>
