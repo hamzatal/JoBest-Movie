@@ -1,20 +1,10 @@
-# render.yaml - الكود المصحح
+# render.yaml - الكود النهائي لخدمة الويب فقط
 services:
-  # 1. خدمة قاعدة البيانات (PostgreSQL) - تم تغيير type: pserv إلى type: database
-  - type: database 
-    name: movie-db
-    plan: free
-    databaseName: moviedb 
-    region: oregon
-    
-  # 2. خدمة الويب (Laravel/Inertia)
+  # 1. خدمة الويب (Laravel/Inertia)
   - type: web
     name: movie-app
     plan: free
     region: oregon
-    
-    # يجب أن يكون هذا السطر موجودًا في ملف .env لديك
-    # VITE_APP_URL سيتم تحديثه تلقائيًا
     
     buildCommand: |
       composer install --no-dev --prefer-dist
@@ -35,14 +25,6 @@ services:
         value: false
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_HOST
-        value: ${movie-db.internalHostname}
-      - key: DB_DATABASE
-        value: moviedb # يجب أن يتطابق مع databaseName أعلاه
-      - key: DB_USERNAME
-        value: moviedb # يجب أن يتطابق مع databaseName أعلاه
-      - key: DB_PASSWORD
-        generateValue: true
       - key: TMDB_API_KEY
         value: YOUR_TMDB_API_KEY_HERE
       - key: WEB_CONCURRENCY
