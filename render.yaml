@@ -2,14 +2,14 @@
 services:
   # 1. خدمة قاعدة البيانات (PostgreSQL)
   - type: pserv
-    name: movie-db
+    name: jobest
     plan: free # الخطة المجانية
     databaseName: moviedb
     region: oregon # اختر أقرب منطقة لك
     
   # 2. خدمة الويب (Laravel/Inertia)
   - type: web
-    name: movie-app
+    name: jobest
     plan: free # الخطة المجانية
     region: oregon # يجب أن تكون نفس منطقة قاعدة البيانات
     buildCommand: |
@@ -33,15 +33,15 @@ services:
       - key: DB_HOST
         value: ${movie-db.internalHostname} # ربط داخلي بقاعدة البيانات
       - key: DB_DATABASE
-        value: moviedb
+        value: jobest
       - key: DB_USERNAME
-        value: moviedb
+        value: jobest
       - key: DB_PASSWORD
         generateValue: true
       - key: TMDB_API_KEY
         value: YOUR_TMDB_API_KEY_HERE # لا تنس تغيير هذا
       - key: VITE_APP_URL
-        value: https://movie-app.onrender.com # سيتم تحديث هذا تلقائيًا بعد النشر
+        value: https://jobest.onrender.com # سيتم تحديث هذا تلقائيًا بعد النشر
       - key: WEB_CONCURRENCY
         value: 1
       
