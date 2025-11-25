@@ -1,15 +1,14 @@
-# render.yaml
 services:
-  # 1. خدمة قاعدة البيانات (PostgreSQL)
-  - type: pserv
-    name: jobest
-    plan: free # الخطة المجانية
-    databaseName: jobest
-    region: oregon # اختر أقرب منطقة لك
+  # 1.  (PostgreSQL)
+  - type: pserv 
+    name: movie-db
+    plan: free
+    databaseName: moviedb 
+    region: oregon
     
-  # 2. خدمة الويب (Laravel/Inertia)
+  # 2. (Laravel/Inertia)
   - type: web
-    name: jobest
+    name: movie-app
     plan: free # الخطة المجانية
     region: oregon # يجب أن تكون نفس منطقة قاعدة البيانات
     buildCommand: |
