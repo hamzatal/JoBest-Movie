@@ -1,20 +1,26 @@
-# render.yaml - الكود النهائي لخدمة الويب فقط
+# render.yaml - الكود النهائي والمصحح لـ Render Free Tier
 services:
   # 1. خدمة الويب (Laravel/Inertia)
   - type: web
     name: jobest
     plan: free
-    region: oregon
+    # تم إزالة region: oregon لأننا سنستخدم env: php
     
+    # تم تغيير env: static إلى env: php
+    env: php 
+    rootDir: .
+    
+    # دمج أوامر البناء والترحيل في buildCommand
     buildCommand: |
       composer install --no-dev --prefer-dist
       npm install
       npm run build
       
-    startCommand: php artisan serve --host=0.0.0.0
-    env: static
-    rootDir: .
-    
+    # دمج أمر الترحيل مع أمر البدء
+    startCommand: |
+      php artisan migrate --force
+      php artisan serve --host=0.0.0.0
+      
     # متغيرات البيئة (Environment Variables)
     envVars:
       - key: APP_KEY
@@ -30,6 +36,4 @@ services:
       - key: WEB_CONCURRENCY
         value: 1
       
-    # أمر التشغيل قبل النشر
-    preDeployCommand: |
-      php artisan migrate --force
+    # تم إزالة preDeployCommand
