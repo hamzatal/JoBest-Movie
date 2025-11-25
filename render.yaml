@@ -1,20 +1,26 @@
+# render.yaml - الكود المصحح
 services:
-  # 1.  (PostgreSQL)
-  - type: pserv 
+  # 1. خدمة قاعدة البيانات (PostgreSQL) - تم تغيير type: pserv إلى type: database
+  - type: database 
     name: movie-db
     plan: free
     databaseName: moviedb 
     region: oregon
     
-  # 2. (Laravel/Inertia)
+  # 2. خدمة الويب (Laravel/Inertia)
   - type: web
     name: movie-app
-    plan: free # الخطة المجانية
-    region: oregon # يجب أن تكون نفس منطقة قاعدة البيانات
+    plan: free
+    region: oregon
+    
+    # يجب أن يكون هذا السطر موجودًا في ملف .env لديك
+    # VITE_APP_URL سيتم تحديثه تلقائيًا
+    
     buildCommand: |
       composer install --no-dev --prefer-dist
       npm install
       npm run build
+      
     startCommand: php artisan serve --host=0.0.0.0
     env: static
     rootDir: .
@@ -30,24 +36,18 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: ${movie-db.internalHostname} # ربط داخلي بقاعدة البيانات
+        value: ${movie-db.internalHostname}
       - key: DB_DATABASE
-        value: jobest
+        value: moviedb # يجب أن يتطابق مع databaseName أعلاه
       - key: DB_USERNAME
-        value: jobest
+        value: moviedb # يجب أن يتطابق مع databaseName أعلاه
       - key: DB_PASSWORD
         generateValue: true
       - key: TMDB_API_KEY
-        value: YOUR_TMDB_API_KEY_HERE # لا تنس تغيير هذا
-      - key: VITE_APP_URL
-        value: https://jobest.onrender.com # سيتم تحديث هذا تلقائيًا بعد النشر
+        value: YOUR_TMDB_API_KEY_HERE
       - key: WEB_CONCURRENCY
         value: 1
       
-    # أوامر ما بعد النشر (لإعداد قاعدة البيانات )
-    autoDeploy: true
-    healthCheckPath: /
-    
-    # أمر التشغيل بعد البناء
+    # أمر التشغيل قبل النشر
     preDeployCommand: |
       php artisan migrate --force
