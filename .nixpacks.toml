@@ -1,3 +1,6 @@
 [phases.setup]
 php_version = "8.2"
 nodejs_version = "18"
+
+[build]
+cmd = "npm install && npm run build"
