@@ -1,6 +1,10 @@
 [phases.setup]
 php_version = "8.2"
-nodejs_version = "18"
+[phases.setup]
+nixpkgs_archive = "https://github.com/NixOS/nixpkgs/archive/refs/tags/23.11.tar.gz"
+
+[packages]
+nodejs-18_x = {}
 
 [build]
 cmd = "npm install && npm run build"
