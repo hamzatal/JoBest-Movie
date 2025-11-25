@@ -5,7 +5,10 @@ services:
     name: jobest
     plan: free
     
-    # تم إزالة env: php بالكامل
+    # *********************************
+    # * تم إضافة سطر runtime: php *
+    # *********************************
+    runtime: php 
     
     rootDir: .
     
