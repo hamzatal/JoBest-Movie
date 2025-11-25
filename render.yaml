@@ -2,7 +2,7 @@
 services:
   # 1. خدمة الويب (Laravel/Inertia)
   - type: web
-    name: movie-app
+    name: jobest
     plan: free
     region: oregon
     
