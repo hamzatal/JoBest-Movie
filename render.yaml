@@ -4,7 +4,7 @@ services:
   - type: pserv
     name: jobest
     plan: free # الخطة المجانية
-    databaseName: moviedb
+    databaseName: jobest
     region: oregon # اختر أقرب منطقة لك
     
   # 2. خدمة الويب (Laravel/Inertia)
