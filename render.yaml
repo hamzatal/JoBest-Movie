@@ -4,13 +4,12 @@ services:
   - type: web
     name: jobest
     plan: free
-    # تم إزالة region: oregon لأننا سنستخدم env: php
     
-    # تم تغيير env: static إلى env: php
-    env: php 
+    # تم إزالة env: php بالكامل
+    
     rootDir: .
     
-    # دمج أوامر البناء والترحيل في buildCommand
+    # دمج أوامر البناء
     buildCommand: |
       composer install --no-dev --prefer-dist
       npm install
@@ -35,5 +34,3 @@ services:
         value: YOUR_TMDB_API_KEY_HERE
       - key: WEB_CONCURRENCY
         value: 1
-      
-    # تم إزالة preDeployCommand
