@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { Head, Link } from "@inertiajs/react";
 import { X, Server, Film, Globe } from "lucide-react";
 import { motion } from "framer-motion";
@@ -16,7 +16,7 @@ const SERVER_OPTIONS = [
     },
     {
         id: 2,
-        name_en: "Bard (MoviesAPI Club)",
+        name_en: "Bard (MoviesAPI Club )",
         name_ar: "بارد (MoviesAPI Club)",
         description_en: "Recommended for recent movies. Alternative source.",
         description_ar: "موصى به للأفلام الحديثة. مصدر بديل.",
@@ -24,7 +24,7 @@ const SERVER_OPTIONS = [
     },
     {
         id: 3,
-        name_en: "Xayah (VidSrc.me)",
+        name_en: "Xayah (VidSrc.me )",
         name_ar: "كسايا (VidSrc.me)",
         description_en:
             "Recommended for recent movies. Another alternative source.",
@@ -33,7 +33,7 @@ const SERVER_OPTIONS = [
     },
     {
         id: 4,
-        name_en: "Ekko (Player.VideasY)",
+        name_en: "Ekko (Player.VideasY )",
         name_ar: "إيكو (Player.VideasY)",
         description_en: "May have 4K movies. Generally better quality.",
         description_ar: "قد يحتوي على أفلام 4K. جودة عامة أفضل.",
@@ -41,7 +41,7 @@ const SERVER_OPTIONS = [
     },
     {
         id: 5,
-        name_en: "Naafiri (VidSrc.su)",
+        name_en: "Naafiri (VidSrc.su )",
         name_ar: "نافييري (VidSrc.su)",
         description_en: "May have 4K movies. Generally better quality.",
         description_ar: "قد يحتوي على أفلام 4K. جودة عامة أفضل.",
@@ -49,7 +49,7 @@ const SERVER_OPTIONS = [
     },
     {
         id: 6,
-        name_en: "Ryze (Vidlink.pro)",
+        name_en: "Ryze (Vidlink.pro )",
         name_ar: "رايز (Vidlink.pro)",
         description_en: "Generally better quality. Alternative source.",
         description_ar: "جودة عامة أفضل. مصدر بديل.",
@@ -72,6 +72,7 @@ const translations = {
         error: "Error: Movie ID not found.",
         selectServer: "Please select a server to watch.",
         back: "Back",
+        switchLang: "Switch to Arabic",
     },
     ar: {
         title: "مشاهدة الفيلم بالكامل",
@@ -84,10 +85,11 @@ const translations = {
         error: "خطأ: لم يتم العثور على معرف الفيلم.",
         selectServer: "الرجاء اختيار سيرفر للمشاهدة.",
         back: "عودة",
+        switchLang: "Switch to English",
     },
 };
 
-// إضافة CSS مخصص لشريط التمرير (Scrollbar) ولمنع الإعلانات
+// إضافة CSS مخصص لشريط التمرير (Scrollbar ) ولمنع الإعلانات
 const customStyles = `
     /* Custom Scrollbar for Server List */
     .custom-scrollbar::-webkit-scrollbar {
@@ -105,29 +107,35 @@ const customStyles = `
     }
 
     /* Basic Ad-Blocking CSS (to hide common ad-related elements in the iframe's parent page) */
-    /* Note: This is a best-effort attempt. True ad-blocking requires a browser extension. */
     iframe[src*="ad"], iframe[src*="pop"], div[id*="ad"], div[class*="ad-container"], div[class*="pop-up"] {
-        display: none !important;
+        /* Keep this for basic element hiding */
     }
 `;
 
 const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
-    // حالة اللغة: 'en' هو الأساس كما طلب المستخدم
-    const [lang, setLang] = useState("en");
+    const iframeRef = useRef(null);
 
-    // تطبيق اللغة العربية افتراضياً إذا لم يكن هناك تفضيل سابق
-    useEffect(() => {
-        // يمكنك هنا قراءة تفضيل اللغة من LocalStorage إذا كنت تدعمه
-        // حالياً، سنبقيها على 'en' كما طلب المستخدم
-        // setLang(localStorage.getItem('lang') || 'en');
-    }, []);
-
-    const t = translations[lang]; // وظيفة الترجمة
-
-    // حالة لتحديد السيرفر النشط، نبدأ بالسيرفر الأول افتراضياً
+    // *****************************************************************
+    // ************ تصحيح الخطأ: تعريف activeServerId ************
+    // *****************************************************************
     const [activeServerId, setActiveServerId] = useState(SERVER_OPTIONS[0].id);
+    // *****************************************************************
 
-    // حساب رابط التضمين النشط بناءً على TMDB ID والسيرفر المختار
+    // ثبات اللغة (Language Persistence)
+    const [lang, setLang] = useState(() => {
+        return localStorage.getItem("playerLang") || "en";
+    });
+
+    const t = translations[lang];
+
+    // دالة تبديل اللغة مع حفظها في localStorage
+    const toggleLang = () => {
+        const newLang = lang === "ar" ? "en" : "ar";
+        setLang(newLang);
+        localStorage.setItem("playerLang", newLang);
+    };
+
+    // حساب رابط التضمين النشط
     const activeEmbedUrl = useMemo(() => {
         if (!tmdbId) return null;
         const server = SERVER_OPTIONS.find((s) => s.id === activeServerId);
@@ -138,7 +146,39 @@ const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
         return <div className="text-white text-center p-10">{t.error}</div>;
     }
 
-    // تحديد اتجاه النص بناءً على اللغة
+    // كود منع الإعلانات المنبثقة
+    useEffect(() => {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+
+        const blockPopups = () => {
+            const originalWindowOpen = window.open;
+            window.open = function (url, name, features) {
+                console.log("Blocked window.open attempt to:", url);
+                return null;
+            };
+
+            const handleBlur = () => {
+                setTimeout(() => {
+                    window.focus();
+                }, 100);
+            };
+
+            window.addEventListener("blur", handleBlur);
+
+            return () => {
+                window.removeEventListener("blur", handleBlur);
+                window.open = originalWindowOpen;
+            };
+        };
+
+        iframe.onload = blockPopups;
+
+        return () => {
+            iframe.onload = null;
+        };
+    }, [activeEmbedUrl]);
+
     const dir = lang === "ar" ? "rtl" : "ltr";
 
     return (
@@ -164,7 +204,10 @@ const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
             >
                 <h1 className="text-2xl font-bold flex items-center gap-2 text-white">
                     <Film className="w-6 h-6 text-red-500" />
-                    {t.title}: {movieTitle || `TMDB ID: ${tmdbId}`}
+                    {t.title}:{/* عرض اسم الفيلم بلون مختلف */}
+                    <span className="text-yellow-400 ml-2 mr-2">
+                        {movieTitle || `TMDB ID: ${tmdbId}`}
+                    </span>
                 </h1>
 
                 <div className="flex items-center gap-3">
@@ -172,13 +215,9 @@ const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
                     <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+                        onClick={toggleLang}
                         className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white transition-all duration-300"
-                        title={
-                            lang === "ar"
-                                ? "Switch to English"
-                                : "التبديل إلى العربية"
-                        }
+                        title={t.switchLang}
                     >
                         <Globe className="w-5 h-5" />
                     </motion.button>
@@ -207,6 +246,7 @@ const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
                 <div className="lg:w-3/4 w-full h-full lg:h-auto bg-black rounded-xl shadow-2xl overflow-hidden">
                     {activeEmbedUrl ? (
                         <iframe
+                            ref={iframeRef}
                             key={activeServerId}
                             src={activeEmbedUrl}
                             title={`${
@@ -247,7 +287,7 @@ const MoviePlayer = ({ tmdbId, movieTitle, isDarkMode = true }) => {
                                     ? "bg-red-600 border-red-600 text-white shadow-lg"
                                     : "bg-gray-700/50 border-gray-700 hover:bg-gray-700 text-gray-200"
                             }`}
-                            dir="ltr" // لضمان قراءة أسماء السيرفرات بشكل صحيح
+                            dir="ltr"
                         >
                             <p className="font-semibold">
                                 {lang === "ar"
