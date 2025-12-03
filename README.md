@@ -9,7 +9,6 @@
 ![Movie Hub Screenshot](/public/github-images/2.jpeg)
 ![Movie Hub Screenshot](/public/github-images/3.jpeg)
 ![Movie Hub Screenshot](/public/github-images/4.jpeg)
-![Movie Hub Screenshot](/public/github-images/5.jpeg)
 ![Movie Hub Screenshot](/public/github-images/6.jpeg)
 
 
