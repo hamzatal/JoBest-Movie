@@ -5,12 +5,12 @@
 ![Movie Hub Screenshot](/public/github-images/login.png)
 📽️  register
 ![Movie Hub Screenshot](/public/github-images/register.png)
-![Movie Hub Screenshot](/public/github-images/1.png)
-![Movie Hub Screenshot](/public/github-images/2.png)
-![Movie Hub Screenshot](/public/github-images/3.png)
-![Movie Hub Screenshot](/public/github-images/4.png)
-![Movie Hub Screenshot](/public/github-images/5.png)
-![Movie Hub Screenshot](/public/github-images/6.png)
+![Movie Hub Screenshot](/public/github-images/1.jpeg)
+![Movie Hub Screenshot](/public/github-images/2.jpeg)
+![Movie Hub Screenshot](/public/github-images/3.jpeg)
+![Movie Hub Screenshot](/public/github-images/4.jpeg)
+![Movie Hub Screenshot](/public/github-images/5.jpeg)
+![Movie Hub Screenshot](/public/github-images/6.jpeg)
 
 
 Movie Hub is a cutting-edge web application designed for movie enthusiasts, built with Laravel and modern web technologies. Discover, track, and manage your favorite films with an intuitive and responsive platform.
