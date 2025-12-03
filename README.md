@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎬 Movie Hub
+# 🎬 JO BEST 🎬
 
 ### *Your Ultimate Cinematic Companion*
 
@@ -340,7 +340,7 @@ Special thanks to:
 - Laravel community for the amazing framework
 - React team for the powerful UI library
 - All contributors who help improve this project
-- You, for checking out Movie Hub! ⭐
+- You, for checking out JO BEST! ⭐
 
 </div>
 
